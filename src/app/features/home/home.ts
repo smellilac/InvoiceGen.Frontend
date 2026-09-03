@@ -4,6 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../core/auth.service';
+import { Logo } from '../../shared/logo';
 
 /**
  * Minimal protected landing page. Exists to verify the auth infrastructure end
@@ -13,7 +14,7 @@ import { AuthService } from '../../core/auth.service';
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatCardModule],
+  imports: [MatButtonModule, MatCardModule, Logo],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })

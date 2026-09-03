@@ -9,6 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth.service';
+import { Logo } from '../../../shared/logo';
 
 @Component({
   selector: 'app-login',
@@ -21,6 +22,7 @@ import { AuthService } from '../../../core/auth.service';
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    Logo,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
@@ -74,7 +76,7 @@ function messageForLoginError(error: unknown): string {
       return 'Too many attempts. Please try again shortly.';
     }
     if (error.status === 0) {
-      return 'Could not reach the server. Check your connection and try again.';
+      return 'Something went wrong. Please try again in a minute.';
     }
   }
   return 'Something went wrong. Please try again.';
