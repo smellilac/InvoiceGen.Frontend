@@ -1,0 +1,13 @@
+.home-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100dvh;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.home-card {
+  width: 100%;
+  max-width: 32rem;
+}
