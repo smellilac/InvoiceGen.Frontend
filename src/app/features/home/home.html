@@ -1,0 +1,21 @@
+<main class="home-page">
+  <mat-card class="home-card" appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>You're signed in</mat-card-title>
+      @if (user(); as u) {
+        <mat-card-subtitle>{{ u.email }}</mat-card-subtitle>
+      }
+    </mat-card-header>
+
+    <mat-card-content>
+      <p>
+        This is a placeholder protected route. The document-type picker will live
+        here once the documents feature is built.
+      </p>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-stroked-button type="button" (click)="logout()">Log out</button>
+    </mat-card-actions>
+  </mat-card>
+</main>
