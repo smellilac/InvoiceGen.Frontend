@@ -1,0 +1,261 @@
+<main class="create-page">
+  <div class="create-header">
+    <h1>New {{ typeName() }}</h1>
+    <a mat-stroked-button routerLink="/">Cancel</a>
+  </div>
+
+  <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-card appearance="outlined">
+      <mat-card-header class="section-header">
+        <mat-card-title>Parties</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="card-body">
+        <mat-form-field appearance="outline">
+          <mat-label>Bill to</mat-label>
+          <textarea
+            matInput
+            formControlName="to"
+            rows="3"
+            placeholder="Customer name and address"
+          ></textarea>
+          @if (form.controls.to.touched && form.controls.to.hasError('required')) {
+            <mat-error>A recipient is required.</mat-error>
+          } @else if (form.controls.to.hasError('server')) {
+            <mat-error>{{ form.controls.to.getError('server') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>From (optional)</mat-label>
+          <textarea
+            matInput
+            formControlName="from"
+            rows="3"
+            placeholder="Your business name and address"
+          ></textarea>
+          <mat-hint>Leave blank to use your saved business profile.</mat-hint>
+          @if (form.controls.from.hasError('server')) {
+            <mat-error>{{ form.controls.from.getError('server') }}</mat-error>
+          }
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header class="section-header">
+        <mat-card-title>Details</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="card-body">
+        <div class="field-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Date</mat-label>
+            <input matInput [matDatepicker]="datePicker" formControlName="date" />
+            <mat-datepicker-toggle matIconSuffix [for]="datePicker" />
+            <mat-datepicker #datePicker />
+            @if (form.controls.date.touched && form.controls.date.hasError('required')) {
+              <mat-error>A date is required.</mat-error>
+            } @else if (form.controls.date.hasError('server')) {
+              <mat-error>{{ form.controls.date.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Due date (optional)</mat-label>
+            <input matInput [matDatepicker]="dueDatePicker" formControlName="due_date" />
+            <mat-datepicker-toggle matIconSuffix [for]="dueDatePicker" />
+            <mat-datepicker #dueDatePicker />
+            @if (form.controls.due_date.hasError('server')) {
+              <mat-error>{{ form.controls.due_date.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="field-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Number (optional)</mat-label>
+            <input matInput formControlName="number" placeholder="e.g. INV-0042" />
+            @if (form.controls.number.hasError('server')) {
+              <mat-error>{{ form.controls.number.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Currency</mat-label>
+            <mat-select formControlName="currency">
+              @for (code of currencies; track code) {
+                <mat-option [value]="code">{{ code }}</mat-option>
+              }
+            </mat-select>
+            @if (form.controls.currency.hasError('server')) {
+              <mat-error>{{ form.controls.currency.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        @if (isCreditNote()) {
+          <mat-form-field appearance="outline" class="highlight-field">
+            <mat-label>Related invoice number</mat-label>
+            <input
+              matInput
+              formControlName="related_document_number"
+              placeholder="The invoice this credit note relates to, e.g. INV-0042"
+            />
+            <mat-hint>Free text — not linked to a document in this system.</mat-hint>
+            @if (form.controls.related_document_number.hasError('server')) {
+              <mat-error>{{ form.controls.related_document_number.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined" formArrayName="items">
+      <mat-card-header class="section-header">
+        <mat-card-title>Line items</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="card-body">
+        @for (item of items.controls; track item; let i = $index) {
+          <fieldset class="item-row" [formGroupName]="i">
+            <legend class="item-legend">Item {{ i + 1 }}</legend>
+
+            <mat-form-field appearance="outline" class="item-name">
+              <mat-label>Name</mat-label>
+              <input matInput formControlName="name" />
+              @if (item.get('name')?.touched && item.get('name')?.hasError('required')) {
+                <mat-error>A name is required.</mat-error>
+              } @else if (item.get('name')?.hasError('server')) {
+                <mat-error>{{ item.get('name')?.getError('server') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="item-qty">
+              <mat-label>Quantity</mat-label>
+              <input matInput type="number" formControlName="quantity" min="0" step="any" />
+              @if (item.get('quantity')?.touched && item.get('quantity')?.hasError('required')) {
+                <mat-error>Required.</mat-error>
+              } @else if (item.get('quantity')?.hasError('server')) {
+                <mat-error>{{ item.get('quantity')?.getError('server') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="item-cost">
+              <mat-label>Unit cost</mat-label>
+              <input matInput type="number" formControlName="unit_cost" min="0" step="any" />
+              @if (item.get('unit_cost')?.touched && item.get('unit_cost')?.hasError('required')) {
+                <mat-error>Required.</mat-error>
+              } @else if (item.get('unit_cost')?.hasError('server')) {
+                <mat-error>{{ item.get('unit_cost')?.getError('server') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="item-description">
+              <mat-label>Description (optional)</mat-label>
+              <input matInput formControlName="description" />
+              @if (item.get('description')?.hasError('server')) {
+                <mat-error>{{ item.get('description')?.getError('server') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="item-reference">
+              <mat-label>Reference (optional)</mat-label>
+              <input matInput formControlName="reference" />
+              @if (item.get('reference')?.hasError('server')) {
+                <mat-error>{{ item.get('reference')?.getError('server') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <button
+              mat-icon-button
+              type="button"
+              class="item-remove"
+              aria-label="Remove item"
+              [disabled]="items.length <= 1"
+              (click)="removeItem(i)"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </fieldset>
+        }
+
+        <button mat-stroked-button type="button" class="add-item" (click)="addItem()">
+          <mat-icon>add</mat-icon>
+          Add item
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header class="section-header">
+        <mat-card-title>Adjustments</mat-card-title>
+        <mat-card-subtitle>
+          Totals are calculated by the server after saving.
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="card-body">
+        <div class="field-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Tax %</mat-label>
+            <input matInput type="number" formControlName="tax_percent" min="0" step="any" />
+            @if (form.controls.tax_percent.hasError('server')) {
+              <mat-error>{{ form.controls.tax_percent.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Discount %</mat-label>
+            <input matInput type="number" formControlName="discount_percent" min="0" step="any" />
+            @if (form.controls.discount_percent.hasError('server')) {
+              <mat-error>{{ form.controls.discount_percent.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Shipping</mat-label>
+            <input matInput type="number" formControlName="shipping_amount" min="0" step="any" />
+            @if (form.controls.shipping_amount.hasError('server')) {
+              <mat-error>{{ form.controls.shipping_amount.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header class="section-header">
+        <mat-card-title>Notes &amp; terms</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="card-body">
+        <mat-form-field appearance="outline">
+          <mat-label>Notes (optional)</mat-label>
+          <textarea matInput formControlName="notes" rows="3"></textarea>
+          @if (form.controls.notes.hasError('server')) {
+            <mat-error>{{ form.controls.notes.getError('server') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Terms (optional)</mat-label>
+          <textarea matInput formControlName="terms" rows="3"></textarea>
+          @if (form.controls.terms.hasError('server')) {
+            <mat-error>{{ form.controls.terms.getError('server') }}</mat-error>
+          }
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    @if (errorMessage()) {
+      <p class="create-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <div class="create-actions">
+      <a mat-button routerLink="/">Cancel</a>
+      <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+        @if (submitting()) {
+          <mat-progress-spinner mode="indeterminate" diameter="20" />
+        } @else {
+          Create {{ typeName() }}
+        }
+      </button>
+    </div>
+  </form>
+</main>

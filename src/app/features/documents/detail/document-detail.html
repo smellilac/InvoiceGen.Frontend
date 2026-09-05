@@ -1,0 +1,88 @@
+<main class="detail-page">
+  @if (doc.isLoading()) {
+    <div class="detail-status" role="status" aria-live="polite">
+      <mat-spinner diameter="48" />
+      <p>Loading document…</p>
+    </div>
+  } @else if (doc.error()) {
+    <div class="detail-status" role="alert">
+      <mat-icon class="status-icon">error_outline</mat-icon>
+      <p>We couldn't load this document. Please try again.</p>
+      <button mat-flat-button type="button" (click)="doc.reload()">Try again</button>
+    </div>
+  } @else if (doc.value(); as document) {
+    <div class="detail-header">
+      <div>
+        <h1>{{ humanize(document.type) }}</h1>
+        @if (document.number) {
+          <p class="detail-number">{{ document.number }}</p>
+        }
+      </div>
+      <div class="detail-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="downloading()"
+          (click)="download()"
+        >
+          <mat-icon>download</mat-icon>
+          Download PDF
+        </button>
+        <button mat-flat-button color="primary" type="button" [disabled]="sending()" (click)="send()">
+          <mat-icon>send</mat-icon>
+          Send
+        </button>
+      </div>
+    </div>
+
+    <mat-card appearance="outlined">
+      <mat-card-content class="detail-grid">
+        <div class="detail-field">
+          <span class="detail-label">Bill to</span>
+          <p class="detail-value multiline">{{ document.to }}</p>
+        </div>
+        @if (document.from) {
+          <div class="detail-field">
+            <span class="detail-label">From</span>
+            <p class="detail-value multiline">{{ document.from }}</p>
+          </div>
+        }
+        <div class="detail-field">
+          <span class="detail-label">Status</span>
+          <p class="detail-value">{{ document.status }}</p>
+        </div>
+        @if (document.related_document_number) {
+          <div class="detail-field">
+            <span class="detail-label">Related document</span>
+            <p class="detail-value">{{ document.related_document_number }}</p>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-content class="totals">
+        <div class="total-row">
+          <span>Subtotal</span>
+          <span>{{ document.subtotal | money: document.currency }}</span>
+        </div>
+        <div class="total-row">
+          <span>Total</span>
+          <span class="total-amount">{{ document.total | money: document.currency }}</span>
+        </div>
+        @if (document.amount_settled) {
+          <div class="total-row">
+            <span>Settled</span>
+            <span>{{ document.amount_settled | money: document.currency }}</span>
+          </div>
+          <div class="total-row">
+            <span>Balance remaining</span>
+            <span>{{ document.balance_remaining | money: document.currency }}</span>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <a mat-button routerLink="/">Back to document types</a>
+  }
+</main>
