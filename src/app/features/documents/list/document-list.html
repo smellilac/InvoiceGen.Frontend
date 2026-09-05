@@ -1,0 +1,81 @@
+<main class="list-page">
+  <header class="list-header">
+    <app-logo class="page-logo" />
+    <a mat-flat-button routerLink="/">
+      <mat-icon>add</mat-icon>
+      New document
+    </a>
+  </header>
+
+  <div class="list-intro">
+    <h1>Documents</h1>
+    <p>Your document history.</p>
+  </div>
+
+  <div class="list-toolbar">
+    <mat-form-field appearance="outline" class="type-filter">
+      <mat-label>Filter by type</mat-label>
+      <mat-select
+        [value]="typeFilter()"
+        (selectionChange)="onTypeChange($event.value)"
+      >
+        <mat-option [value]="null">All types</mat-option>
+        @for (type of types.value(); track type.id) {
+          <mat-option [value]="type.id">
+            <mat-icon class="option-icon" aria-hidden="true">{{ iconFor(type.icon) }}</mat-icon>
+            {{ type.name }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (documentsPage.isLoading()) {
+    <div class="list-status" role="status" aria-live="polite">
+      <mat-spinner diameter="48" />
+      <p>Loading documents…</p>
+    </div>
+  } @else if (documentsPage.error()) {
+    <div class="list-status" role="alert">
+      <mat-icon class="status-icon">error_outline</mat-icon>
+      <p>We couldn't load your documents. Please try again.</p>
+      <button mat-flat-button type="button" (click)="documentsPage.reload()">Try again</button>
+    </div>
+  } @else if (documentsPage.value().data?.length === 0) {
+    <div class="list-status">
+      <mat-icon class="status-icon">inbox</mat-icon>
+      <p>No documents yet</p>
+      <a mat-flat-button routerLink="/">Create your first document</a>
+    </div>
+  } @else {
+    <ul class="document-list">
+      @for (document of documentsPage.value().data; track document.id) {
+        <li>
+          <a class="document-row" [routerLink]="['/documents', document.id]">
+            <mat-card appearance="outlined" class="document-row-inner">
+              <mat-card-content class="document-row-content">
+                <div class="row-type">
+                  <mat-icon class="row-icon" aria-hidden="true">{{ iconFor(document.type) }}</mat-icon>
+                  <span class="row-type-name">{{ nameFor(document.type) }}</span>
+                </div>
+                <span class="row-number">{{ document.number || '—' }}</span>
+                <span class="row-to">{{ document.to }}</span>
+                <span class="row-total">{{ document.total | money: document.currency }}</span>
+                <span class="row-status">{{ document.status }}</span>
+                <span class="row-date">{{ document.created_at | date: 'mediumDate' }}</span>
+              </mat-card-content>
+            </mat-card>
+          </a>
+        </li>
+      }
+    </ul>
+
+    <mat-paginator
+      [length]="documentsPage.value().total ?? 0"
+      [pageSize]="documentsPage.value().per_page ?? perPage"
+      [pageIndex]="(documentsPage.value().page ?? 1) - 1"
+      hidePageSize
+      (page)="onPage($event)"
+    />
+  }
+</main>
