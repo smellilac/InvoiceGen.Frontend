@@ -8,12 +8,18 @@ import { authGuard } from '../../core/auth.guard';
  */
 export const DOCUMENTS_ROUTES: Routes = [
   {
+    path: 'documents',
+    canActivate: [authGuard],
+    loadComponent: () => import('./list/document-list').then((m) => m.DocumentList),
+  },
+  {
+    // Must stay above `documents/:id` so "new" isn't captured as an id.
     path: 'documents/new',
     canActivate: [authGuard],
     loadComponent: () => import('./create/document-create').then((m) => m.DocumentCreate),
   },
   {
-    // Must come after `documents/new` so the literal wins over this param route.
+    // Comes after `documents/new` so the literal path wins over this param route.
     path: 'documents/:id',
     canActivate: [authGuard],
     loadComponent: () => import('./detail/document-detail').then((m) => m.DocumentDetail),

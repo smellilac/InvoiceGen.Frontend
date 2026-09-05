@@ -1,24 +1,40 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
+import { MonetaryAmount } from '../api/models/monetary-amount';
+
 /**
- * Formats a monetary amount using the *document's own* `currency` code via
- * `Intl.NumberFormat` — never a fixed locale or a hand-built `$` string. This
- * mirrors the backend's `x-rendering-policy.currency_correct_number_formatting`
- * (see docs/architecture.md) so the frontend and the generated PDF format the
- * same amount identically. All money in the app must render through this pipe
- * (docs/conventions.md).
+ * Renders a {@link MonetaryAmount} using the *document's own* `currency` field
+ * via `Intl.NumberFormat`, never a fixed locale — the currency code drives the
+ * symbol and decimal places. This mirrors the backend's
+ * `x-rendering-policy.currency_correct_number_formatting` and must stay
+ * consistent with it, or the app and the generated PDF would format the same
+ * document differently (see docs/architecture.md → "Money rendering").
  *
- * Usage: `{{ document.total | money: document.currency }}`.
+ * Every place an amount is shown goes through this pipe — never `.toFixed(2)` or
+ * a hand-built `$` string (see docs/conventions.md).
+ *
+ * Usage: `{{ document.total | money: document.currency }}`
  */
 @Pipe({ name: 'money' })
 export class MoneyPipe implements PipeTransform {
-  transform(amount: number | null | undefined, currency: string | null | undefined): string {
+  transform(
+    amount: MonetaryAmount | null | undefined,
+    currency: string | null | undefined,
+  ): string {
     if (amount == null) {
       return '';
     }
-    // The amount carries no currency of its own; fall back to USD only if the
-    // document somehow lacks one (the backend always sets it on a Document).
-    const code = currency || 'USD';
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency: code }).format(amount);
+
+    const code = currency ?? 'USD';
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: code }).format(amount);
+    } catch {
+      // Unknown/malformed currency code: fall back to a plain, still-localized
+      // number with the raw code, rather than throwing and blanking the row.
+      return `${code} ${new Intl.NumberFormat(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount)}`;
+    }
   }
 }
