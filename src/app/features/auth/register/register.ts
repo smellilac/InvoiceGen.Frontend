@@ -10,6 +10,7 @@ import { Router, RouterLink } from '@angular/router';
 
 import { ValidationErrorResponse } from '../../../api/models/validation-error-response';
 import { AuthService } from '../../../core/auth.service';
+import { Logo } from '../../../shared/logo';
 
 @Component({
   selector: 'app-register',
@@ -22,6 +23,7 @@ import { AuthService } from '../../../core/auth.service';
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    Logo,
   ],
   templateUrl: './register.html',
   styleUrl: './register.scss',
