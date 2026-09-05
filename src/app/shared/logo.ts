@@ -17,7 +17,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 
     .logo {
       display: block;
-      height: 4rem;
+      height: 96px;
       width: auto;
     }
   `,

@@ -19,6 +19,10 @@
   max-width: 24rem;
 }
 
+.auth-card mat-card-header {
+  margin-bottom: 24px;
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;
