@@ -12,12 +12,7 @@ import { AuthService } from './auth.service';
  * Runs in an injection context via `provideAppInitializer`, so `inject()` works.
  */
 export function initializeAuth(): Promise<void> {
-  const auth = inject(AuthService);
-
-  if (auth.hasStoredRefreshToken() && !auth.accessToken()) {
-    // Swallow failures: a bad stored token just means the guard sends the user to /login.
-    return auth.refresh().catch(() => undefined);
-  }
-
-  return Promise.resolve();
+  // The restore logic lives on AuthService so the route guard can await the very
+  // same (memoized) promise and never decide before the refresh has settled.
+  return inject(AuthService).restoreSession();
 }

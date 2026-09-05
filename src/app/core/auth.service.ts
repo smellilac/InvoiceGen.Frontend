@@ -41,6 +41,29 @@ export class AuthService {
     return this.readRefreshToken() !== null;
   }
 
+  /** Memoizes the one-time startup restore so every caller awaits the same result. */
+  private sessionRestore: Promise<void> | null = null;
+
+  /**
+   * Restore a session on app start when possible: if a refresh token is stored
+   * but there's no in-memory access token (a fresh page load), silently exchange
+   * it for a new pair. Idempotent — the work runs at most once and all callers
+   * (the bootstrap initializer and the route guard) await the same promise, so
+   * the guard never decides before this has settled. A failure leaves the
+   * session cleared, and the guard falls through to /login.
+   */
+  restoreSession(): Promise<void> {
+    return (this.sessionRestore ??= this.runRestore());
+  }
+
+  private async runRestore(): Promise<void> {
+    if (this.hasStoredRefreshToken() && !this.accessToken()) {
+      // Swallow failures: refresh() already clears the session on error, and a
+      // bad/expired stored token just means the guard sends the user to /login.
+      await this.refresh().catch(() => undefined);
+    }
+  }
+
   async login(email: string, password: string): Promise<void> {
     const response = await this.api.invoke(loginUser, { body: { email, password } });
     this.applyAuthResponse(response);
