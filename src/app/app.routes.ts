@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { AUTH_ROUTES } from './features/auth/auth.routes';
+import { DOCUMENTS_ROUTES } from './features/documents/documents.routes';
 import { authGuard } from './core/auth.guard';
 
 export const routes: Routes = [
@@ -8,7 +9,9 @@ export const routes: Routes = [
   {
     path: '',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/home/home').then((m) => m.Home),
+    loadComponent: () =>
+      import('./features/documents/picker/document-picker').then((m) => m.DocumentPicker),
   },
+  ...DOCUMENTS_ROUTES,
   { path: '**', redirectTo: '' },
 ];
