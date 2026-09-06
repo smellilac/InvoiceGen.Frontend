@@ -3,13 +3,17 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { DocumentType } from '../../../api/models/document-type';
+import { ConfirmDialog, ConfirmDialogData } from '../../../shared/confirm-dialog';
 import { MoneyPipe } from '../../../shared/currency.pipe';
 import { documentTypeNames } from '../document-type-display';
 import { DocumentService } from '../document.service';
@@ -36,6 +40,7 @@ const SEND_STATUS_POLL_MS = 3000;
     MatButtonModule,
     MatCardModule,
     MatIconModule,
+    MatMenuModule,
     MatProgressSpinnerModule,
     MoneyPipe,
   ],
@@ -48,6 +53,7 @@ export class DocumentDetail {
   private readonly documents = inject(DocumentService);
   private readonly documentTypes = inject(DocumentTypeService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
 
   protected readonly id = toSignal(
     this.route.paramMap.pipe(map((params) => params.get('id') ?? undefined)),
@@ -63,6 +69,7 @@ export class DocumentDetail {
 
   protected readonly sending = signal(false);
   protected readonly downloading = signal(false);
+  protected readonly deleting = signal(false);
 
   /**
    * Shows the one-time "generated!" banner. Only true right after creation — the
@@ -168,6 +175,63 @@ export class DocumentDetail {
       this.snackBar.open(message, 'Dismiss', { duration: 6000 });
     } finally {
       this.sending.set(false);
+    }
+  }
+
+  /**
+   * "Edit" opens the create form pre-filled from this document. It is NOT an
+   * in-place update: submitting there hits `POST /documents` and mints a brand-new
+   * document, leaving this one untouched (see docs/architecture.md — Phase 1 has no
+   * PATCH for documents). We pass the type up front (so the form's heading and
+   * credit-note logic work synchronously) and a `duplicateFrom` id the create form
+   * resolves by fetching `GET /documents/{id}` and mapping it onto the form.
+   */
+  protected edit(): void {
+    const document = this.doc.value();
+    const id = this.id();
+    if (!document || !id) {
+      return;
+    }
+    this.router.navigate(['/documents/new'], {
+      queryParams: { type: document.type, duplicateFrom: id },
+    });
+  }
+
+  /**
+   * "Delete" asks first (never a one-click destroy), then calls
+   * `DELETE /documents/{id}` — a soft delete server-side — and returns to the list
+   * with a confirmation snackbar.
+   */
+  protected async confirmDelete(): Promise<void> {
+    const id = this.id();
+    if (!id || this.deleting()) {
+      return;
+    }
+
+    const data: ConfirmDialogData = {
+      title: 'Delete document',
+      message: 'Delete this document? It will be removed from your history.',
+      confirmText: 'Delete',
+      destructive: true,
+    };
+    const confirmed = await firstValueFrom(
+      this.dialog.open(ConfirmDialog, { data }).afterClosed(),
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    this.deleting.set(true);
+    try {
+      await this.documents.delete(id);
+      await this.router.navigate(['/documents']);
+      this.snackBar.open('Document deleted.', 'Dismiss', { duration: 4000 });
+    } catch {
+      this.snackBar.open('Could not delete the document. Please try again.', 'Dismiss', {
+        duration: 6000,
+      });
+    } finally {
+      this.deleting.set(false);
     }
   }
 }

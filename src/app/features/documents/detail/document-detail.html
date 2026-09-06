@@ -32,6 +32,25 @@
           <mat-icon>send</mat-icon>
           Send
         </button>
+        <button
+          mat-stroked-button
+          type="button"
+          class="more-actions-button"
+          aria-label="More actions"
+          [matMenuTriggerFor]="moreActions"
+        >
+          <mat-icon>more_horiz</mat-icon>
+        </button>
+        <mat-menu #moreActions="matMenu">
+          <button mat-menu-item type="button" (click)="edit()">
+            <mat-icon>edit</mat-icon>
+            <span>Edit</span>
+          </button>
+          <button mat-menu-item type="button" [disabled]="deleting()" (click)="confirmDelete()">
+            <mat-icon>delete_outline</mat-icon>
+            <span>Delete</span>
+          </button>
+        </mat-menu>
       </div>
     </div>
 
@@ -39,7 +58,7 @@
       <div class="created-banner" role="status">
         <p class="created-banner-text">
           Your {{ nameFor(document.type) }} has been generated! Click Download PDF above to save
-          it to your device.
+          it — it will be saved to your Downloads folder.
         </p>
         <button
           mat-icon-button

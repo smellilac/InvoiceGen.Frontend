@@ -49,6 +49,20 @@
   flex-wrap: wrap;
 }
 
+// Icon-only text button: Material sizes text buttons for an icon + label pair and
+// gives a leading icon asymmetric margins (negative left / positive right) to space
+// it from the label. With no label, that offset shifts the lone icon off-center, so
+// reset the margins and center it dead in the button.
+.more-actions-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  .mat-icon {
+    margin: 0;
+  }
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
