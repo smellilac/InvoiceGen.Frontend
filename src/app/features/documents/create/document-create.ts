@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,6 +15,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs/operators';
 
 import { CreateDocumentRequest } from '../../../api/models/create-document-request';
+import { Document } from '../../../api/models/document';
 import { DocumentType } from '../../../api/models/document-type';
 import { LineItem } from '../../../api/models/line-item';
 import { ValidationErrorResponse } from '../../../api/models/validation-error-response';
@@ -72,6 +73,20 @@ export class DocumentCreate {
     { initialValue: null },
   );
 
+  /**
+   * Set when arriving via the detail page's "Edit" action
+   * (`/documents/new?duplicateFrom=<id>`). We fetch that document and prefill the
+   * form from it — but submitting still `POST`s a brand-new document; this is a
+   * duplicate-to-edit, never an in-place update (see docs/architecture.md).
+   */
+  private readonly duplicateFromId = toSignal(
+    this.route.queryParamMap.pipe(map((params) => params.get('duplicateFrom') ?? undefined)),
+    { initialValue: undefined },
+  );
+  private readonly source = this.documents.getResource(this.duplicateFromId);
+  /** Guards the one-shot prefill so user edits aren't clobbered by a later resource emission. */
+  private prefilled = false;
+
   /** `related_document_number` is meaningful mainly for credit notes (see the spec). */
   protected readonly isCreditNote = computed(() => this.type() === 'credit_note');
 
@@ -119,6 +134,18 @@ export class DocumentCreate {
         this.form.controls.currency.setValue(user.default_currency);
       }
     }
+
+    // When editing (duplicating) an existing document, prefill from it once its
+    // GET resolves. Runs after the profile defaults above so the source document's
+    // own `from`/`currency` win.
+    effect(() => {
+      const doc = this.source.value();
+      if (!doc || this.prefilled) {
+        return;
+      }
+      this.prefilled = true;
+      this.prefillFrom(doc);
+    });
   }
 
   protected get items(): FormArray {
@@ -143,6 +170,49 @@ export class DocumentCreate {
       quantity: this.fb.control<number | null>(null, Validators.required),
       unit_cost: this.fb.control<number | null>(null, Validators.required),
       reference: this.fb.nonNullable.control(''),
+    });
+  }
+
+  /**
+   * Copies a source document's fields onto the form for the "Edit" (duplicate)
+   * flow. Everything the form collects is mapped, including line items — the
+   * `Document` now round-trips them (see the backend's `DocumentDto`). Only the
+   * inputs are copied, never the server-computed totals; those get recomputed on
+   * submit. The result is an unsaved draft: submitting `POST`s a new document.
+   */
+  private prefillFrom(doc: Document): void {
+    // Rebuild the line-item FormArray to match the source (never fewer than one row).
+    this.items.clear();
+    const items = doc.items ?? [];
+    if (items.length === 0) {
+      this.items.push(this.createItem());
+    } else {
+      for (const item of items) {
+        const group = this.createItem();
+        group.patchValue({
+          name: item.name ?? '',
+          description: item.description ?? '',
+          quantity: item.quantity ?? null,
+          unit_cost: item.unit_cost ?? null,
+          reference: item.reference ?? '',
+        });
+        this.items.push(group);
+      }
+    }
+
+    this.form.patchValue({
+      to: doc.to ?? '',
+      from: doc.from ?? '',
+      date: doc.date ? fromIsoDate(doc.date) : this.form.controls.date.value,
+      due_date: doc.due_date ? fromIsoDate(doc.due_date) : null,
+      number: doc.number ?? '',
+      related_document_number: doc.related_document_number ?? '',
+      currency: doc.currency ?? this.form.controls.currency.value,
+      tax_percent: doc.tax_percent ?? 0,
+      discount_percent: doc.discount_percent ?? 0,
+      shipping_amount: doc.shipping_amount ?? 0,
+      notes: doc.notes ?? '',
+      terms: doc.terms ?? '',
     });
   }
 
@@ -280,6 +350,16 @@ export class DocumentCreate {
     }
     return applied;
   }
+}
+
+/**
+ * Parses a `YYYY-MM-DD` string into a local `Date` (midnight local time), the
+ * inverse of {@link toIsoDate}. Built from parts rather than `new Date(str)` to
+ * avoid the UTC-parsing shift that would move the date a day in some timezones.
+ */
+function fromIsoDate(value: string): Date {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
 /** Formats a `Date` as a `YYYY-MM-DD` string in local time (no timezone shift). */

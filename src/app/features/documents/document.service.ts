@@ -4,6 +4,7 @@ import { httpResource } from '@angular/common/http';
 import { Api } from '../../api/api';
 import { ApiConfiguration } from '../../api/api-configuration';
 import { createDocument } from '../../api/fn/documents/create-document';
+import { deleteDocument } from '../../api/fn/documents/delete-document';
 import { downloadDocumentPdf } from '../../api/fn/documents/download-document-pdf';
 import { getDocument } from '../../api/fn/documents/get-document';
 import { ListDocuments$Params, listDocuments } from '../../api/fn/documents/list-documents';
@@ -108,5 +109,15 @@ export class DocumentService {
   /** `GET /documents/{id}/pdf` — resolves with the PDF as a `Blob`. */
   downloadPdf(id: string): Promise<Blob> {
     return this.api.invoke(downloadDocumentPdf, { documentId: id });
+  }
+
+  /**
+   * `DELETE /documents/{id}`. A soft delete server-side (the backend stamps
+   * `deleted_at` and hides the row from list/get/pdf/send — see the backend's
+   * document delete handler), so it drops out of history but stays recoverable.
+   * Resolves on `204`.
+   */
+  delete(id: string): Promise<void> {
+    return this.api.invoke(deleteDocument, { documentId: id });
   }
 }
