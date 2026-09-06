@@ -19,6 +19,7 @@ export const DOCUMENTS_ROUTES: Routes = [
     loadComponent: () => import('./create/document-create').then((m) => m.DocumentCreate),
   },
   {
+    // Comes after `documents/new` so the literal path wins over this param route.
     path: 'documents/:id',
     canActivate: [authGuard],
     loadComponent: () => import('./detail/document-detail').then((m) => m.DocumentDetail),
