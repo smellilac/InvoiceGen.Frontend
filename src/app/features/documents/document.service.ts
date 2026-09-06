@@ -12,6 +12,7 @@ import { sendDocument } from '../../api/fn/documents/send-document';
 import { CreateDocumentRequest } from '../../api/models/create-document-request';
 import { Document } from '../../api/models/document';
 import { DocumentList } from '../../api/models/document-list';
+import { SendDocumentRequest } from '../../api/models/send-document-request';
 
 /** Backend default when `per_page` is omitted (see openapi.yaml `GET /documents`). */
 export const DEFAULT_PER_PAGE = 20;
@@ -97,13 +98,16 @@ export class DocumentService {
   }
 
   /**
-   * `POST /documents/{id}/send`. Returns `202` (queued, not delivered) — callers
-   * must not treat this as a "sent" confirmation; the real outcome is read back
-   * from the document's `last_send_status` on a re-fetch (see docs/architecture.md
-   * and the backend's `x-email-delivery-policy`).
+   * `POST /documents/{id}/send`. Pass the recipient `to_email` and optional
+   * `message` the user entered in the send dialog as the request body — the
+   * backend needs a resolvable recipient (see the backend's
+   * `x-email-delivery-policy.recipient_resolution`). Returns `202` (queued, not
+   * delivered) — callers must not treat this as a "sent" confirmation; the real
+   * outcome is read back from the document's `last_send_status` on a re-fetch
+   * (see docs/architecture.md).
    */
-  send(id: string): Promise<Document> {
-    return this.api.invoke(sendDocument, { documentId: id });
+  send(id: string, body: SendDocumentRequest): Promise<Document> {
+    return this.api.invoke(sendDocument, { documentId: id, body });
   }
 
   /** `GET /documents/{id}/pdf` — resolves with the PDF as a `Blob`. */
