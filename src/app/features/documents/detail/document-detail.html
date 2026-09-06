@@ -13,7 +13,7 @@
   } @else if (doc.value(); as document) {
     <div class="detail-header">
       <div>
-        <h1>{{ humanize(document.type) }}</h1>
+        <h1>{{ nameFor(document.type) }}</h1>
         @if (document.number) {
           <p class="detail-number">{{ document.number }}</p>
         }
@@ -34,6 +34,24 @@
         </button>
       </div>
     </div>
+
+    @if (showCreatedBanner()) {
+      <div class="created-banner" role="status">
+        <p class="created-banner-text">
+          Your {{ nameFor(document.type) }} has been generated! Click Download PDF above to save
+          it to your device.
+        </p>
+        <button
+          mat-icon-button
+          type="button"
+          class="created-banner-dismiss"
+          aria-label="Dismiss"
+          (click)="dismissBanner()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    }
 
     <mat-card appearance="outlined">
       <mat-card-content class="detail-grid">

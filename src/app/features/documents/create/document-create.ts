@@ -166,7 +166,9 @@ export class DocumentCreate {
 
     try {
       const doc = await this.documents.create(this.buildRequest(type));
-      await this.router.navigate(['/documents', doc.id]);
+      // `justCreated` drives the one-time "generated!" banner on the detail page;
+      // it rides in router navigation state so it doesn't appear on normal revisits.
+      await this.router.navigate(['/documents', doc.id], { state: { justCreated: true } });
     } catch (error) {
       this.handleError(error);
     } finally {
