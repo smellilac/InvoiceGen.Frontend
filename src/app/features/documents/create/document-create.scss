@@ -1,0 +1,120 @@
+.create-page {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.create-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+  }
+}
+
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// Shared spacing for every section heading in the form. Drives the gap between
+// a section's heading block and the content below it — and, where a subtitle is
+// present, the gap between the title and that subtitle — so any section added
+// later picks this up automatically without per-section tuning.
+.section-header {
+  margin-bottom: 1.25rem;
+
+  mat-card-subtitle {
+    margin-top: 0.5rem;
+  }
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-body mat-form-field {
+  width: 100%;
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  mat-form-field {
+    flex: 1 1 12rem;
+  }
+}
+
+.highlight-field {
+  // credit_note's related invoice number is the one type-specific field worth
+  // drawing the eye to (see the spec) — give it a subtle accent.
+  border-left: 3px solid var(--mat-sys-primary);
+  padding-left: 0.75rem;
+  box-sizing: border-box;
+}
+
+.item-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 0.5rem 1rem;
+  align-items: start;
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem 0;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 0.5rem;
+}
+
+.item-legend {
+  grid-column: 1 / -1;
+  padding: 0 0.25rem;
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.item-description,
+.item-reference {
+  grid-column: 1 / -1;
+}
+
+.item-remove {
+  align-self: center;
+}
+
+.add-item {
+  align-self: flex-start;
+}
+
+.create-error {
+  margin: 0;
+  color: var(--mat-sys-error);
+}
+
+.create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@media (max-width: 30rem) {
+  .item-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .item-name {
+    grid-column: 1 / -1;
+  }
+
+  .item-remove {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
