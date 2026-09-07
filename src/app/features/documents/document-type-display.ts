@@ -12,17 +12,17 @@ import { DocumentTypeInfo } from '../../api/models/document-type-info';
  * real Material Symbols icon.
  */
 const ICON_BY_IDENTIFIER: Record<string, string> = {
-  invoice: 'receipt_long',
-  receipt: 'receipt',
-  credit_note: 'currency_exchange',
-  quote: 'request_quote',
+  invoice: 'edit_document',
+  receipt: 'receipt_long',
+  credit_note: 'restore',
+  quote: 'edit_note',
   estimate: 'calculate',
-  proforma_invoice: 'article',
+  proforma_invoice: 'info',
   purchase_order: 'shopping_cart',
-  sales_order: 'point_of_sale',
-  statement: 'summarize',
+  sales_order: 'send',
+  statement: 'bar_chart',
   timesheet: 'schedule',
-  work_order: 'engineering',
+  work_order: 'build',
   packing_slip: 'inventory_2',
 };
 
@@ -36,6 +36,40 @@ const FALLBACK_ICON = 'description';
  */
 export function documentTypeIcon(identifier: string | null | undefined): string {
   return (identifier && ICON_BY_IDENTIFIER[identifier]) || FALLBACK_ICON;
+}
+
+/**
+ * Card copy for each document type on the picker. These blurbs are UI-authored
+ * marketing text, not backend data, so they live here rather than coming from
+ * `DocumentTypeInfo.description` (which may be terse or absent). Keyed by the
+ * `DocumentType` id.
+ */
+const DESCRIPTION_BY_IDENTIFIER: Record<string, string> = {
+  invoice: 'Create and send professional invoices to your customers.',
+  receipt: 'Generate receipts for payments received.',
+  credit_note: 'Issue a credit note for returns or adjustments.',
+  quote: 'Create a quote and share it with your customer.',
+  estimate: 'Prepare an estimate for upcoming work or services.',
+  proforma_invoice: 'Generate a proforma invoice for preliminary billing.',
+  purchase_order: 'Create a purchase order for your suppliers.',
+  sales_order: 'Create a sales order for confirmed purchases.',
+  statement: 'Generate an account statement for your customer.',
+  timesheet: 'Track and record time for your projects.',
+  work_order: 'Create a work order for tasks and services.',
+  packing_slip: 'Generate a packing slip for shipped items.',
+};
+
+/**
+ * The picker card blurb for a document type. Falls back to the backend-supplied
+ * `DocumentTypeInfo.description` for any id we don't have UI copy for.
+ */
+export function documentTypeDescription(
+  identifier: string | null | undefined,
+  fallback?: string | null,
+): string {
+  return (
+    (identifier && DESCRIPTION_BY_IDENTIFIER[identifier]) || fallback || ''
+  );
 }
 
 /**

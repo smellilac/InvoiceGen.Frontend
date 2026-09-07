@@ -1,9 +1,4 @@
 <main class="picker-page">
-  <header class="picker-header">
-    <app-logo class="page-logo" />
-    <button mat-stroked-button type="button" (click)="logout()">Log out</button>
-  </header>
-
   <div class="picker-intro">
     <h1>What would you like to create?</h1>
     <p>Choose a document type to get started.</p>
@@ -36,10 +31,15 @@
           >
             <mat-card appearance="outlined" class="type-card-inner">
               <mat-card-content class="type-card-content">
-                <mat-icon class="type-icon" aria-hidden="true">{{ iconFor(type.icon) }}</mat-icon>
+                <mat-icon
+                  class="type-icon"
+                  fontSet="material-symbols-outlined"
+                  aria-hidden="true"
+                  >{{ iconFor(type.icon) }}</mat-icon
+                >
                 <h2 class="type-name">{{ type.name }}</h2>
-                @if (type.description) {
-                  <p class="type-description">{{ type.description }}</p>
+                @if (descriptionFor(type.id, type.description); as description) {
+                  <p class="type-description">{{ description }}</p>
                 }
               </mat-card-content>
             </mat-card>
