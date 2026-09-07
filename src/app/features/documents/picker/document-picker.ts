@@ -3,11 +3,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
-import { AuthService } from '../../../core/auth.service';
-import { Logo } from '../../../shared/logo';
-import { documentTypeIcon } from '../document-type-display';
+import { documentTypeDescription, documentTypeIcon } from '../document-type-display';
 import { DocumentTypeService } from '../document-type.service';
 
 /**
@@ -25,14 +23,11 @@ import { DocumentTypeService } from '../document-type.service';
     MatCardModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    Logo,
   ],
   templateUrl: './document-picker.html',
   styleUrl: './document-picker.scss',
 })
 export class DocumentPicker {
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
   private readonly documentTypes = inject(DocumentTypeService);
 
   protected readonly types = this.documentTypes.list();
@@ -40,8 +35,6 @@ export class DocumentPicker {
   /** Resolves a backend icon identifier to a Material Symbols icon name. */
   protected readonly iconFor = documentTypeIcon;
 
-  protected async logout(): Promise<void> {
-    await this.auth.logout();
-    await this.router.navigateByUrl('/login');
-  }
+  /** Resolves a document type id to its picker card blurb. */
+  protected readonly descriptionFor = documentTypeDescription;
 }

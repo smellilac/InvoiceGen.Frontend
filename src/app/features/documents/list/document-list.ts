@@ -10,7 +10,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
 
 import { DocumentType } from '../../../api/models/document-type';
-import { Logo } from '../../../shared/logo';
 import { MoneyPipe } from '../../../shared/currency.pipe';
 import { documentTypeIcon, documentTypeNames } from '../document-type-display';
 import { DEFAULT_PER_PAGE, DocumentService } from '../document.service';
@@ -40,7 +39,6 @@ import { DocumentTypeService } from '../document-type.service';
     MatPaginatorModule,
     MatProgressSpinnerModule,
     MatSelectModule,
-    Logo,
   ],
   templateUrl: './document-list.html',
   styleUrl: './document-list.scss',
