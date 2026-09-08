@@ -79,7 +79,15 @@
                 <span class="row-number">{{ document.number || '—' }}</span>
                 <span class="row-to">{{ document.to }}</span>
                 <span class="row-total">{{ document.total | money: document.currency }}</span>
-                <span class="row-status">{{ document.status }}</span>
+                <span class="row-status">
+                  <span class="row-status-text">{{ document.status }}</span>
+                  @if (isOverdue(document)) {
+                    <span class="badge badge--overdue">
+                      <mat-icon class="badge-icon" aria-hidden="true">error</mat-icon>
+                      {{ overdueLabel(document) }}
+                    </span>
+                  }
+                </span>
                 <span class="row-date">{{ document.created_at | date: 'mediumDate' }}</span>
               </mat-card-content>
             </mat-card>

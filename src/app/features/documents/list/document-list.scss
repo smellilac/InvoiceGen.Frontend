@@ -148,8 +148,41 @@
 }
 
 .row-status {
-  text-transform: capitalize;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
   color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+}
+
+.row-status-text {
+  text-transform: capitalize;
+}
+
+/* Overdue pill. No prior badge component existed, so this is styled with the
+   same Material system tokens the rest of the app uses (error-container),
+   keeping it consistent rather than a one-off colour. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font: var(--mat-sys-label-small);
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.badge--overdue {
+  background: var(--mat-sys-error-container, #fce8e6);
+  color: var(--mat-sys-on-error-container, #b3261e);
+}
+
+.badge-icon {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 .row-date {
