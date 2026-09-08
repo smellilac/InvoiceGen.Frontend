@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -31,6 +31,7 @@ import { DocumentTypeService } from '../document-type.service';
   imports: [
     RouterLink,
     DatePipe,
+    NgTemplateOutlet,
     MoneyPipe,
     MatButtonModule,
     MatCardModule,
@@ -47,6 +48,17 @@ export class DocumentList {
   private readonly documents = inject(DocumentService);
   private readonly documentTypes = inject(DocumentTypeService);
 
+  /**
+   * When set, the list is embedded in a host page (e.g. a customer's detail view):
+   * it filters to this customer's documents and drops its own page header, intro,
+   * and type filter so it slots in as a plain history table. Left unset, it renders
+   * as the standalone `/documents` page.
+   */
+  readonly customerId = input<string>();
+
+  /** True when hosted inside another page via {@link customerId}. */
+  protected readonly embedded = computed(() => !!this.customerId());
+
   /** Current 1-based page and the active type filter (null = all types). */
   protected readonly page = signal(1);
   protected readonly typeFilter = signal<DocumentType | null>(null);
@@ -58,13 +70,14 @@ export class DocumentList {
   protected readonly perPage = DEFAULT_PER_PAGE;
 
   /**
-   * The paginated result. Reads `page`/`typeFilter` reactively, so changing
-   * either refetches. `per_page` is deliberately omitted so the backend default
-   * governs page size. `customer_id` is left out until the customers feature
-   * exists — the service already accepts both.
+   * The paginated result. Reads `page`/`typeFilter`/`customerId` reactively, so
+   * changing any of them refetches. `per_page` is deliberately omitted so the
+   * backend default governs page size. `customer_id` is only sent when the list is
+   * embedded for a specific customer (see {@link customerId}).
    */
   protected readonly documentsPage = this.documents.list(() => ({
     type: this.typeFilter() ?? undefined,
+    customer_id: this.customerId() || undefined,
     page: this.page(),
   }));
 

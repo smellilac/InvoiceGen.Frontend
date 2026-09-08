@@ -5,6 +5,14 @@
   box-sizing: border-box;
 }
 
+/* Embedded in a host page (e.g. customer detail): shed the standalone page's
+   width cap and padding so it fills the host's own content column. */
+.list-page--embedded {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
 .list-header {
   display: flex;
   align-items: center;

@@ -7,6 +7,7 @@ import { of } from 'rxjs';
 
 import { AuthService } from '../../../core/auth.service';
 import { Document } from '../../../api/models/document';
+import { CustomerService } from '../../customers/customer.service';
 import { DocumentService } from '../document.service';
 import { DocumentTypeService } from '../document-type.service';
 import { DocumentCreate } from './document-create';
@@ -32,6 +33,15 @@ describe('DocumentCreate (edit / duplicate-and-replace)', () => {
       getResource: vi.fn().mockReturnValue({ value: () => undefined }),
     };
     const documentTypes = { list: vi.fn().mockReturnValue({ value: () => [] }) };
+    // The create form now injects CustomerService for the customer autocomplete.
+    // Stub its reactive accessors so no real `httpResource` (which would need
+    // HttpClient) is built during construction; the customer-picker behaviour is
+    // exercised in the browser, not here.
+    const customers = {
+      list: vi.fn().mockReturnValue({ value: () => ({ data: [] }) }),
+      getResource: vi.fn().mockReturnValue({ value: () => undefined }),
+      get: vi.fn(),
+    };
     const auth = {
       currentUser: () => null,
       // Stub the `GET /auth/me` resource the logo toggle reads. No logo, not
@@ -47,6 +57,7 @@ describe('DocumentCreate (edit / duplicate-and-replace)', () => {
       providers: [
         { provide: DocumentService, useValue: documents },
         { provide: DocumentTypeService, useValue: documentTypes },
+        { provide: CustomerService, useValue: customers },
         { provide: AuthService, useValue: auth },
         { provide: Router, useValue: router },
         { provide: MatSnackBar, useValue: snackBar },

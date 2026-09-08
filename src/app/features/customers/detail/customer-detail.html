@@ -1,0 +1,61 @@
+<main class="detail-page">
+  @if (customer.isLoading()) {
+    <div class="detail-status" role="status" aria-live="polite">
+      <mat-spinner diameter="48" />
+      <p>Loading customer…</p>
+    </div>
+  } @else if (customer.error()) {
+    <div class="detail-status" role="alert">
+      <mat-icon class="status-icon">error_outline</mat-icon>
+      <p>We couldn't load this customer. Please try again.</p>
+      <a mat-flat-button routerLink="/customers">Back to customers</a>
+    </div>
+  } @else if (customer.value(); as c) {
+    <div class="detail-header">
+      <h1>{{ c.name }}</h1>
+      <div class="detail-actions">
+        <a
+          mat-flat-button
+          color="primary"
+          routerLink="/"
+          [queryParams]="{ customerId: c.id }"
+        >
+          <mat-icon>note_add</mat-icon>
+          Create document for this customer
+        </a>
+        <a mat-stroked-button [routerLink]="['/customers', c.id, 'edit']">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </a>
+      </div>
+    </div>
+
+    <mat-card appearance="outlined">
+      <mat-card-content class="detail-grid">
+        <div class="detail-field">
+          <span class="detail-label">Email</span>
+          <p class="detail-value">{{ c.email || '—' }}</p>
+        </div>
+        <div class="detail-field">
+          <span class="detail-label">Phone</span>
+          <p class="detail-value">{{ c.phone || '—' }}</p>
+        </div>
+        <div class="detail-field detail-field--wide">
+          <span class="detail-label">Address</span>
+          <p class="detail-value multiline">{{ c.address || '—' }}</p>
+        </div>
+        <div class="detail-field detail-field--wide">
+          <span class="detail-label">Notes</span>
+          <p class="detail-value multiline">{{ c.notes || '—' }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <section class="history">
+      <h2 class="history-title">Documents</h2>
+      <app-document-list [customerId]="c.id" />
+    </section>
+
+    <a mat-button routerLink="/customers">Back to customers</a>
+  }
+</main>

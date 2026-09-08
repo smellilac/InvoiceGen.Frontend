@@ -5,10 +5,10 @@ import { Routes } from '@angular/router';
  * `MainLayout` parent route in `app.routes.ts` (which carries the auth guard for
  * all its children), so they don't repeat the guard here.
  *
- * There's no separate detail view: clicking a customer opens the same form the
- * create flow uses, prefilled for editing — so `/customers/:id` is the edit
- * route. `customers/new` stays above `customers/:id` so the literal path wins
- * over the param route.
+ * Clicking a customer opens the read-only detail view at `/customers/:id`; its
+ * "Edit" action goes to `/customers/:id/edit`, which reuses the create form
+ * prefilled for editing. `customers/new` and `customers/:id/edit` stay above the
+ * bare `customers/:id` param route so their literal segments win.
  */
 export const CUSTOMERS_ROUTES: Routes = [
   {
@@ -20,7 +20,11 @@ export const CUSTOMERS_ROUTES: Routes = [
     loadComponent: () => import('./form/customer-form').then((m) => m.CustomerForm),
   },
   {
-    path: 'customers/:id',
+    path: 'customers/:id/edit',
     loadComponent: () => import('./form/customer-form').then((m) => m.CustomerForm),
+  },
+  {
+    path: 'customers/:id',
+    loadComponent: () => import('./detail/customer-detail').then((m) => m.CustomerDetail),
   },
 ];

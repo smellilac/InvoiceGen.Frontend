@@ -32,9 +32,12 @@ feature folders — if two features need the same thing, it belongs in
 | `/register` | public | `POST /auth/register` |
 | `/` | protected | Document type picker — `GET /document-types` |
 | `/documents` | protected | Paginated history — `GET /documents`, filterable by `type` / `customer_id` |
-| `/documents/new` | protected | Create form — `POST /documents` |
+| `/documents/new` | protected | Create form — `POST /documents`. Accepts `?type=` and optionally `?customerId=` (pre-links a saved customer, pre-filling `to`) |
 | `/documents/:id` | protected | Detail: summary, Download PDF, Send Email |
-| `/customers` | protected | List/create/edit/delete — `/customers*` |
+| `/customers` | protected | Paginated list — `/customers*` |
+| `/customers/new` | protected | Create form — `POST /customers` |
+| `/customers/:id` | protected | Read-only detail + document history (`GET /documents?customer_id=`); "Create document for this customer" opens the picker with `?customerId=` |
+| `/customers/:id/edit` | protected | Edit form — `PATCH`/`DELETE /customers/{id}` |
 | `/profile` | protected | Business profile — `GET`/`PATCH /auth/me` |
 
 All protected routes sit behind `authGuard` (see `authentication.md`).
