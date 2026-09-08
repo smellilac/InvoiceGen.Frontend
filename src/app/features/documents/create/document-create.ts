@@ -1,7 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -14,19 +15,24 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { map } from 'rxjs/operators';
+import { debounceTime, map } from 'rxjs/operators';
 
 import { CreateDocumentRequest } from '../../../api/models/create-document-request';
+import { Customer } from '../../../api/models/customer';
 import { Document } from '../../../api/models/document';
 import { DocumentType } from '../../../api/models/document-type';
 import { LineItem } from '../../../api/models/line-item';
 import { ValidationErrorResponse } from '../../../api/models/validation-error-response';
 import { AuthService } from '../../../core/auth.service';
+import { CustomerService } from '../../customers/customer.service';
 import { DocumentService } from '../document.service';
 import { DocumentTypeService } from '../document-type.service';
 
 /** A short list of common ISO 4217 codes for the currency picker. */
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'INR', 'NZD'] as const;
+
+/** Debounce before a keystroke in the customer autocomplete turns into a request. */
+const CUSTOMER_SEARCH_DEBOUNCE_MS = 300;
 
 /**
  * Create form for a document (`/documents/new?type=<id>`). The type was already
@@ -45,6 +51,7 @@ const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'INR
   imports: [
     ReactiveFormsModule,
     RouterLink,
+    MatAutocompleteModule,
     MatButtonModule,
     MatCardModule,
     MatCheckboxModule,
@@ -63,6 +70,7 @@ export class DocumentCreate {
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
+  private readonly customers = inject(CustomerService);
   private readonly documents = inject(DocumentService);
   private readonly documentTypes = inject(DocumentTypeService);
   private readonly snackBar = inject(MatSnackBar);
@@ -91,6 +99,45 @@ export class DocumentCreate {
   private readonly source = this.documents.getResource(this.duplicateFromId);
   /** Guards the one-shot prefill so user edits aren't clobbered by a later resource emission. */
   private prefilled = false;
+
+  /**
+   * The "Select existing customer" autocomplete input. Independent of the `to`
+   * textarea: picking a customer sets `customer_id` and pre-fills `to`, but `to`
+   * stays freely editable afterwards and editing it never unlinks the customer
+   * (the link is still useful for filtering and email resolution). The value is a
+   * plain string while typing and briefly the picked `Customer` object right after
+   * selection — {@link displayCustomer} renders either.
+   */
+  protected readonly customerControl = new FormControl<string | Customer>('', {
+    nonNullable: true,
+  });
+  /** Debounced search term feeding {@link customerResults}. */
+  private readonly customerSearch = signal('');
+  /**
+   * Saved-customer options for the autocomplete (`GET /customers?search=`), same
+   * search pattern as the customers list. Reads `customerSearch` reactively so it
+   * refetches as the user types.
+   */
+  protected readonly customerResults = this.customers.list(() => ({
+    search: this.customerSearch() || undefined,
+    page: 1,
+  }));
+  /** The currently linked saved customer, if any — drives the "None" option and hint. */
+  protected readonly selectedCustomer = signal<Customer | null>(null);
+
+  /**
+   * Set when arriving from a customer's detail page
+   * (`/documents/new?customerId=<id>`). We fetch that customer and apply the same
+   * selection logic as picking them from the autocomplete (sets `customer_id`,
+   * pre-fills `to`).
+   */
+  private readonly customerIdParam = toSignal(
+    this.route.queryParamMap.pipe(map((params) => params.get('customerId') ?? undefined)),
+    { initialValue: undefined },
+  );
+  private readonly customerParam = this.customers.getResource(this.customerIdParam);
+  /** Guards the one-shot query-param prefill so a later emission can't re-apply it. */
+  private customerParamApplied = false;
 
   /**
    * The signed-in user's profile (`GET /auth/me`), used to decide whether the
@@ -127,6 +174,11 @@ export class DocumentCreate {
 
   protected readonly form = this.fb.group({
     to: this.fb.nonNullable.control('', Validators.required),
+    // Optional link to a saved customer. Set/cleared by the autocomplete (or the
+    // `?customerId=` param), carried over by `prefillFrom` when editing, and kept
+    // independent of `to` — see the customer-picker fields above. Never a visible
+    // control; there's no template binding for it.
+    customer_id: this.fb.control<string | null>(null),
     from: this.fb.nonNullable.control(''),
     date: this.fb.control<Date | null>(new Date(), Validators.required),
     due_date: this.fb.control<Date | null>(null),
@@ -183,6 +235,30 @@ export class DocumentCreate {
       this.logoDefaulted = true;
       this.form.controls.include_logo.setValue(!!user.logo_url);
     });
+
+    // Debounce keystrokes in the customer autocomplete into the search signal.
+    // Only a typed string drives the search — selecting an option emits the
+    // `Customer` object, which the option handler deals with instead.
+    this.customerControl.valueChanges
+      .pipe(debounceTime(CUSTOMER_SEARCH_DEBOUNCE_MS), takeUntilDestroyed())
+      .subscribe((value) => {
+        if (typeof value === 'string') {
+          this.customerSearch.set(value.trim());
+        }
+      });
+
+    // Arriving from a customer's detail page (`?customerId=`): once that customer
+    // resolves, apply the same selection as picking them manually. Skipped in edit
+    // mode, where `prefillFrom` already seeds `customer_id`/`to` from the source
+    // document's own (frozen) values.
+    effect(() => {
+      const customer = this.customerParam.value();
+      if (!customer || this.customerParamApplied || this.duplicateFromId()) {
+        return;
+      }
+      this.customerParamApplied = true;
+      this.applyCustomer(customer);
+    });
   }
 
   protected get items(): FormArray {
@@ -208,6 +284,66 @@ export class DocumentCreate {
       unit_cost: this.fb.control<number | null>(null, Validators.required),
       reference: this.fb.nonNullable.control(''),
     });
+  }
+
+  /** Renders the autocomplete value, whether it's typed text or a picked customer. */
+  protected readonly displayCustomer = (value: string | Customer | null): string =>
+    typeof value === 'string' ? value : (value?.name ?? '');
+
+  /**
+   * An autocomplete option was chosen: a `Customer` links it, or `null` (the
+   * "None" option) unlinks it. Editing `to` afterwards never runs through here, so
+   * the link survives manual edits.
+   */
+  protected onCustomerSelected(value: Customer | null): void {
+    if (value === null) {
+      this.clearCustomer();
+    } else {
+      this.applyCustomer(value);
+    }
+  }
+
+  /**
+   * Links a saved customer: records it on `customer_id`, pre-fills `to` from the
+   * customer's name/address (still freely editable afterwards), and shows the name
+   * in the autocomplete input without re-triggering a search.
+   */
+  private applyCustomer(customer: Customer): void {
+    this.selectedCustomer.set(customer);
+    this.form.controls.customer_id.setValue(customer.id ?? null);
+    const to = [customer.name, customer.address].filter(Boolean).join('\n');
+    this.form.controls.to.setValue(to);
+    this.customerControl.setValue(customer.name ?? '', { emitEvent: false });
+    this.customerSearch.set('');
+  }
+
+  /**
+   * Unlinks the saved customer (the "None" option / clear button): drops
+   * `customer_id` and empties the autocomplete input. Leaves the `to` textarea
+   * untouched — whatever was typed there stays.
+   */
+  protected clearCustomer(): void {
+    this.selectedCustomer.set(null);
+    this.form.controls.customer_id.setValue(null);
+    this.customerControl.setValue('', { emitEvent: false });
+    this.customerSearch.set('');
+  }
+
+  /**
+   * Resolves a linked customer purely to show it as selected in the autocomplete
+   * (used by the edit flow, where `prefillFrom` already set `customer_id` and the
+   * document's frozen `to`). Deliberately does NOT touch `to` — the document's own
+   * snapshot wins. Best-effort: on failure the link stays, only the display hint
+   * is skipped.
+   */
+  private async showLinkedCustomer(customerId: string): Promise<void> {
+    try {
+      const customer = await this.customers.get(customerId);
+      this.selectedCustomer.set(customer);
+      this.customerControl.setValue(customer.name ?? '', { emitEvent: false });
+    } catch {
+      // Non-fatal — see the doc comment.
+    }
   }
 
   /**
@@ -240,6 +376,11 @@ export class DocumentCreate {
 
     this.form.patchValue({
       to: doc.to ?? '',
+      // Carry the customer link over too, the same as every other field — a
+      // duplicated/edited document keeps pointing at its customer (used for
+      // filtering and send-time email resolution) even though `to` is a frozen
+      // snapshot that may diverge. Show it as selected in the autocomplete.
+      customer_id: doc.customer_id ?? null,
       from: doc.from ?? '',
       date: doc.date ? fromIsoDate(doc.date) : this.form.controls.date.value,
       due_date: doc.due_date ? fromIsoDate(doc.due_date) : null,
@@ -257,6 +398,10 @@ export class DocumentCreate {
       // template's `hasProfileLogo` gate.)
       include_logo: !!doc.logo_url,
     });
+
+    if (doc.customer_id) {
+      void this.showLinkedCustomer(doc.customer_id);
+    }
   }
 
   protected async submit(): Promise<void> {
@@ -344,6 +489,9 @@ export class DocumentCreate {
       include_logo: raw.include_logo,
     };
 
+    if (raw.customer_id) {
+      body.customer_id = raw.customer_id;
+    }
     const from = raw.from.trim();
     if (from) {
       body.from = from;

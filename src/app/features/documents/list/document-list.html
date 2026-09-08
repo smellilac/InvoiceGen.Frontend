@@ -1,33 +1,45 @@
-<main class="list-page">
-  <header class="list-header">
-    <a mat-flat-button routerLink="/">
-      <mat-icon>add</mat-icon>
-      New document
-    </a>
-  </header>
+@if (embedded()) {
+  <section class="list-page list-page--embedded">
+    <ng-container [ngTemplateOutlet]="listBody" />
+  </section>
+} @else {
+  <main class="list-page">
+    <ng-container [ngTemplateOutlet]="listBody" />
+  </main>
+}
 
-  <div class="list-intro">
-    <h1>Documents</h1>
-    <p>Your document history.</p>
-  </div>
+<ng-template #listBody>
+  @if (!embedded()) {
+    <header class="list-header">
+      <a mat-flat-button routerLink="/">
+        <mat-icon>add</mat-icon>
+        New document
+      </a>
+    </header>
 
-  <div class="list-toolbar">
-    <mat-form-field appearance="outline" class="type-filter">
-      <mat-label>Filter by type</mat-label>
-      <mat-select
-        [value]="typeFilter()"
-        (selectionChange)="onTypeChange($event.value)"
-      >
-        <mat-option [value]="null">All types</mat-option>
-        @for (type of types.value(); track type.id) {
-          <mat-option [value]="type.id">
-            <mat-icon class="option-icon" aria-hidden="true">{{ iconFor(type.icon) }}</mat-icon>
-            {{ type.name }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-  </div>
+    <div class="list-intro">
+      <h1>Documents</h1>
+      <p>Your document history.</p>
+    </div>
+
+    <div class="list-toolbar">
+      <mat-form-field appearance="outline" class="type-filter">
+        <mat-label>Filter by type</mat-label>
+        <mat-select
+          [value]="typeFilter()"
+          (selectionChange)="onTypeChange($event.value)"
+        >
+          <mat-option [value]="null">All types</mat-option>
+          @for (type of types.value(); track type.id) {
+            <mat-option [value]="type.id">
+              <mat-icon class="option-icon" aria-hidden="true">{{ iconFor(type.icon) }}</mat-icon>
+              {{ type.name }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+  }
 
   @if (documentsPage.isLoading()) {
     <div class="list-status" role="status" aria-live="polite">
@@ -41,11 +53,18 @@
       <button mat-flat-button type="button" (click)="documentsPage.reload()">Try again</button>
     </div>
   } @else if (documentsPage.value().data?.length === 0) {
-    <div class="list-status">
-      <mat-icon class="status-icon">inbox</mat-icon>
-      <p>No documents yet</p>
-      <a mat-flat-button routerLink="/">Create your first document</a>
-    </div>
+    @if (embedded()) {
+      <div class="list-status">
+        <mat-icon class="status-icon">inbox</mat-icon>
+        <p>No documents for this customer yet.</p>
+      </div>
+    } @else {
+      <div class="list-status">
+        <mat-icon class="status-icon">inbox</mat-icon>
+        <p>No documents yet</p>
+        <a mat-flat-button routerLink="/">Create your first document</a>
+      </div>
+    }
   } @else {
     <ul class="document-list">
       @for (document of documentsPage.value().data; track document.id) {
@@ -77,4 +96,4 @@
       (page)="onPage($event)"
     />
   }
-</main>
+</ng-template>

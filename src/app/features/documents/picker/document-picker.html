@@ -27,7 +27,7 @@
           <a
             class="type-card"
             [routerLink]="['/documents/new']"
-            [queryParams]="{ type: type.id }"
+            [queryParams]="queryParamsFor(type.id)"
           >
             <mat-card appearance="outlined" class="type-card-inner">
               <mat-card-content class="type-card-content">

@@ -5,14 +5,6 @@
   box-sizing: border-box;
 }
 
-/* Embedded in a host page (e.g. customer detail): shed the standalone page's
-   width cap and padding so it fills the host's own content column. */
-.list-page--embedded {
-  max-width: none;
-  margin: 0;
-  padding: 0;
-}
-
 .list-header {
   display: flex;
   align-items: center;
@@ -38,15 +30,9 @@
   margin-bottom: 1rem;
 }
 
-.type-filter {
+.search-field {
   width: 100%;
-  max-width: 20rem;
-}
-
-.option-icon {
-  vertical-align: middle;
-  margin-right: 0.5rem;
-  color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+  max-width: 24rem;
 }
 
 .list-status {
@@ -69,7 +55,7 @@
   }
 }
 
-.document-list {
+.customer-list {
   list-style: none;
   margin: 0 0 1rem;
   padding: 0;
@@ -78,7 +64,7 @@
   gap: 0.75rem;
 }
 
-.document-row {
+.customer-row {
   display: block;
   text-decoration: none;
   color: inherit;
@@ -90,69 +76,52 @@
   }
 }
 
-.document-row-inner {
+.customer-row-inner {
   transition:
     box-shadow 150ms ease,
     transform 150ms ease;
 
-  .document-row:hover & {
+  .customer-row:hover & {
     box-shadow: var(--mat-sys-level2, 0 4px 8px rgba(0, 0, 0, 0.15));
     transform: translateY(-2px);
   }
 }
 
-.document-row-content {
+.customer-row-content {
   display: grid;
-  grid-template-columns: minmax(9rem, 1.5fr) minmax(5rem, 1fr) minmax(8rem, 2fr) auto auto auto;
+  grid-template-columns: minmax(9rem, 1.5fr) minmax(10rem, 2fr) minmax(7rem, 1fr) auto;
   align-items: center;
   gap: 0.75rem 1rem;
 
   @media (max-width: 40rem) {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr auto;
   }
 }
 
-.row-type {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-}
-
-.row-icon {
-  color: var(--mat-sys-primary, #3f51b5);
-  flex: none;
-}
-
-.row-type-name {
+.row-name {
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.row-number {
-  color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
-}
-
-.row-to {
+.row-email {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.row-total {
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-  text-align: right;
-}
-
-.row-status {
-  text-transform: capitalize;
   color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
 }
 
-.row-date {
+.row-phone {
   color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
   white-space: nowrap;
+
+  @media (max-width: 40rem) {
+    display: none;
+  }
+}
+
+.row-chevron {
+  color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+  justify-self: end;
 }

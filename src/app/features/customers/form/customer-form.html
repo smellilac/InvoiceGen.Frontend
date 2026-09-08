@@ -1,0 +1,120 @@
+<main class="form-page">
+  <div class="form-header">
+    <h1>{{ isEdit() ? 'Edit customer' : 'New customer' }}</h1>
+    <a mat-stroked-button routerLink="/customers">Cancel</a>
+  </div>
+
+  @if (loading()) {
+    <div class="form-status" role="status" aria-live="polite">
+      <mat-spinner diameter="48" />
+      <p>Loading customer…</p>
+    </div>
+  } @else if (loadError()) {
+    <div class="form-status" role="alert">
+      <mat-icon class="status-icon">error_outline</mat-icon>
+      <p>We couldn't load this customer. Please try again.</p>
+      <a mat-flat-button routerLink="/customers">Back to customers</a>
+    </div>
+  } @else {
+    <form class="customer-form" [formGroup]="form" (ngSubmit)="submit()">
+      <mat-card appearance="outlined">
+        <mat-card-header class="section-header">
+          <mat-card-title>Details</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="card-body">
+          <mat-form-field appearance="outline">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name" autocomplete="off" />
+            @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+              <mat-error>A name is required.</mat-error>
+            } @else if (form.controls.name.hasError('server')) {
+              <mat-error>{{ form.controls.name.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email (optional)</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="off" />
+            @if (form.controls.email.hasError('email')) {
+              <mat-error>Enter a valid email address.</mat-error>
+            } @else if (form.controls.email.hasError('server')) {
+              <mat-error>{{ form.controls.email.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Address (optional)</mat-label>
+            <textarea
+              matInput
+              formControlName="address"
+              rows="3"
+              placeholder="Street, city, postcode…"
+            ></textarea>
+            @if (form.controls.address.hasError('server')) {
+              <mat-error>{{ form.controls.address.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Phone (optional)</mat-label>
+            <input matInput type="tel" formControlName="phone" autocomplete="off" />
+            @if (form.controls.phone.hasError('server')) {
+              <mat-error>{{ form.controls.phone.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-header class="section-header">
+          <mat-card-title>Internal notes</mat-card-title>
+          <mat-card-subtitle>Never shown on documents — for your eyes only.</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content class="card-body">
+          <mat-form-field appearance="outline">
+            <mat-label>Notes (optional)</mat-label>
+            <textarea
+              matInput
+              formControlName="notes"
+              rows="3"
+              placeholder="Private reminders about this customer…"
+            ></textarea>
+            <mat-hint>These stay private and are never printed on a document.</mat-hint>
+            @if (form.controls.notes.hasError('server')) {
+              <mat-error>{{ form.controls.notes.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+        </mat-card-content>
+      </mat-card>
+
+      @if (errorMessage()) {
+        <p class="form-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <div class="form-actions">
+        @if (isEdit()) {
+          <button
+            mat-stroked-button
+            color="warn"
+            type="button"
+            class="delete-button"
+            [disabled]="deleting() || submitting()"
+            (click)="confirmDelete()"
+          >
+            <mat-icon>delete_outline</mat-icon>
+            Delete
+          </button>
+        }
+        <span class="actions-spacer"></span>
+        <a mat-button routerLink="/customers">Cancel</a>
+        <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+          @if (submitting()) {
+            <mat-progress-spinner mode="indeterminate" diameter="20" />
+          } @else {
+            {{ isEdit() ? 'Save changes' : 'Create customer' }}
+          }
+        </button>
+      </div>
+    </form>
+  }
+</main>

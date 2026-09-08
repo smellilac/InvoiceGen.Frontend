@@ -1,0 +1,83 @@
+<main class="list-page">
+  <header class="list-header">
+    <a mat-flat-button routerLink="/customers/new">
+      <mat-icon>add</mat-icon>
+      New customer
+    </a>
+  </header>
+
+  <div class="list-intro">
+    <h1>Customers</h1>
+    <p>Your saved customers.</p>
+  </div>
+
+  <div class="list-toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search by name</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [formControl]="searchControl" autocomplete="off" />
+      @if (searchControl.value) {
+        <button
+          matSuffix
+          mat-icon-button
+          type="button"
+          aria-label="Clear search"
+          (click)="searchControl.setValue('')"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+  </div>
+
+  @if (customersPage.isLoading()) {
+    <div class="list-status" role="status" aria-live="polite">
+      <mat-spinner diameter="48" />
+      <p>Loading customers…</p>
+    </div>
+  } @else if (customersPage.error()) {
+    <div class="list-status" role="alert">
+      <mat-icon class="status-icon">error_outline</mat-icon>
+      <p>We couldn't load your customers. Please try again.</p>
+      <button mat-flat-button type="button" (click)="customersPage.reload()">Try again</button>
+    </div>
+  } @else if (customersPage.value().data?.length === 0) {
+    @if (search()) {
+      <div class="list-status">
+        <mat-icon class="status-icon">search_off</mat-icon>
+        <p>No customers match “{{ search() }}”.</p>
+      </div>
+    } @else {
+      <div class="list-status">
+        <mat-icon class="status-icon">group</mat-icon>
+        <p>No customers yet</p>
+        <a mat-flat-button routerLink="/customers/new">Add your first customer</a>
+      </div>
+    }
+  } @else {
+    <ul class="customer-list">
+      @for (customer of customersPage.value().data; track customer.id) {
+        <li>
+          <a class="customer-row" [routerLink]="['/customers', customer.id]">
+            <mat-card appearance="outlined" class="customer-row-inner">
+              <mat-card-content class="customer-row-content">
+                <span class="row-name">{{ customer.name }}</span>
+                <span class="row-email">{{ customer.email || '—' }}</span>
+                <span class="row-phone">{{ customer.phone || '—' }}</span>
+                <mat-icon class="row-chevron" aria-hidden="true">chevron_right</mat-icon>
+              </mat-card-content>
+            </mat-card>
+          </a>
+        </li>
+      }
+    </ul>
+
+    <mat-paginator
+      [length]="customersPage.value().total ?? 0"
+      [pageSize]="customersPage.value().per_page ?? perPage"
+      [pageIndex]="(customersPage.value().page ?? 1) - 1"
+      hidePageSize
+      (page)="onPage($event)"
+    />
+  }
+</main>
