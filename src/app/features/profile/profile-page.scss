@@ -1,0 +1,114 @@
+.profile-page {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.profile-header {
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+  }
+}
+
+.profile-loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.profile-summary {
+  margin-bottom: 1.5rem;
+}
+
+.summary-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 3rem;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-label {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.summary-value {
+  font: var(--mat-sys-body-large);
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// Shared spacing for section headings — mirrors the document create form.
+.section-header {
+  margin-bottom: 1.25rem;
+
+  mat-card-subtitle {
+    margin-top: 0.5rem;
+  }
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-body mat-form-field {
+  width: 100%;
+}
+
+.logo-upload {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.logo-upload-hint {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+  flex: 1 1 12rem;
+}
+
+.logo-preview {
+  margin: 0.5rem 0 0;
+
+  img {
+    display: block;
+    max-width: 12rem;
+    max-height: 6rem;
+    object-fit: contain;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    background: var(--mat-sys-surface);
+  }
+
+  figcaption {
+    margin-top: 0.25rem;
+    font: var(--mat-sys-label-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.profile-error {
+  margin: 0;
+  color: var(--mat-sys-error);
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

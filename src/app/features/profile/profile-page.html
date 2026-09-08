@@ -1,0 +1,156 @@
+<main class="profile-page">
+  <div class="profile-header">
+    <h1>Profile</h1>
+  </div>
+
+  @if (user.isLoading()) {
+    <div class="profile-loading">
+      <mat-progress-spinner mode="indeterminate" diameter="36" />
+    </div>
+  } @else if (user.error()) {
+    <p class="profile-error" role="alert">
+      Could not load your profile.
+      <button mat-button type="button" (click)="user.reload()">Retry</button>
+    </p>
+  } @else if (user.value(); as me) {
+    <mat-card appearance="outlined" class="profile-summary">
+      <mat-card-content class="summary-body">
+        <div class="summary-item">
+          <span class="summary-label">Email</span>
+          <span class="summary-value">{{ me.email }}</span>
+        </div>
+        @if (memberSince(me); as since) {
+          <div class="summary-item">
+            <span class="summary-label">Member since</span>
+            <span class="summary-value">{{ since }}</span>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <form class="profile-form" [formGroup]="form" (ngSubmit)="submit()">
+      <mat-card appearance="outlined">
+        <mat-card-header class="section-header">
+          <mat-card-title>Business details</mat-card-title>
+          <mat-card-subtitle>
+            Used to pre-fill the “from” field and branding on your documents.
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content class="card-body">
+          <mat-form-field appearance="outline">
+            <mat-label>Business name</mat-label>
+            <input matInput formControlName="business_name" />
+            @if (form.controls.business_name.hasError('server')) {
+              <mat-error>{{ form.controls.business_name.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Business address</mat-label>
+            <textarea
+              matInput
+              formControlName="business_address"
+              rows="4"
+              placeholder="Street, city, postcode…"
+            ></textarea>
+            <mat-hint>Pre-fills the “from” block on new documents.</mat-hint>
+            @if (form.controls.business_address.hasError('server')) {
+              <mat-error>{{ form.controls.business_address.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Default currency</mat-label>
+            <mat-select formControlName="default_currency">
+              @for (code of currencies; track code) {
+                <mat-option [value]="code">{{ code }}</mat-option>
+              }
+            </mat-select>
+            @if (form.controls.default_currency.hasError('server')) {
+              <mat-error>{{ form.controls.default_currency.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-header class="section-header">
+          <mat-card-title>Logo</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="card-body">
+          <mat-form-field appearance="outline">
+            <mat-label>Logo URL</mat-label>
+            <input matInput formControlName="logo_url" type="url" placeholder="https://…" />
+            <mat-hint>
+              A direct link to an image file (ending in .png/.jpg) — not a web page.
+            </mat-hint>
+            @if (form.controls.logo_url.hasError('server')) {
+              <mat-error>{{ form.controls.logo_url.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="logo-upload">
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="logoFileInput.click()"
+              [disabled]="processingLogo()"
+            >
+              @if (processingLogo()) {
+                <mat-progress-spinner mode="indeterminate" diameter="18" />
+              } @else {
+                <mat-icon>upload</mat-icon>
+              }
+              Upload from device
+            </button>
+            @if (logoPreviewUrl()) {
+              <button
+                mat-button
+                type="button"
+                (click)="removeLogo()"
+                [disabled]="processingLogo()"
+              >
+                Remove
+              </button>
+            }
+            <span class="logo-upload-hint">
+              Or pick an image from your device — it’s uploaded and saved to your profile right away.
+            </span>
+            <input
+              #logoFileInput
+              hidden
+              type="file"
+              accept="image/*"
+              (change)="onLogoFileSelected($event)"
+            />
+          </div>
+
+          @if (logoUploadError()) {
+            <p class="profile-error" role="alert">{{ logoUploadError() }}</p>
+          }
+
+          @if (logoPreviewUrl(); as url) {
+            <figure class="logo-preview">
+              <img [src]="url" alt="Logo preview" />
+              <figcaption>Preview</figcaption>
+            </figure>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      @if (errorMessage()) {
+        <p class="profile-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <div class="profile-actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+          @if (submitting()) {
+            <mat-progress-spinner mode="indeterminate" diameter="20" />
+          } @else {
+            Save changes
+          }
+        </button>
+      </div>
+    </form>
+  }
+</main>
