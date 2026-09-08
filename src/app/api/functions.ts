@@ -13,6 +13,12 @@ export type { GetCurrentUser$Params as GetCurrentUser$Params } from './fn/auth/g
 export { getCurrentUser as getCurrentUser } from './fn/auth/get-current-user';
 export type { UpdateCurrentUser$Params as UpdateCurrentUser$Params } from './fn/auth/update-current-user';
 export { updateCurrentUser as updateCurrentUser } from './fn/auth/update-current-user';
+export type { UploadUserLogo$Params as UploadUserLogo$Params } from './fn/auth/upload-user-logo';
+export { uploadUserLogo as uploadUserLogo } from './fn/auth/upload-user-logo';
+export type { DeleteUserLogo$Params as DeleteUserLogo$Params } from './fn/auth/delete-user-logo';
+export { deleteUserLogo as deleteUserLogo } from './fn/auth/delete-user-logo';
+export type { GetUserLogo$Params as GetUserLogo$Params } from './fn/auth/get-user-logo';
+export { getUserLogo as getUserLogo } from './fn/auth/get-user-logo';
 export type { ListDocumentTypes$Params as ListDocumentTypes$Params } from './fn/document-types/list-document-types';
 export { listDocumentTypes as listDocumentTypes } from './fn/document-types/list-document-types';
 export type { ListCustomers$Params as ListCustomers$Params } from './fn/customers/list-customers';

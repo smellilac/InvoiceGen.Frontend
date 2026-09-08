@@ -1,12 +1,19 @@
+import { httpResource } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 
 import { Api } from '../api/api';
+import { ApiConfiguration } from '../api/api-configuration';
+import { deleteUserLogo } from '../api/fn/auth/delete-user-logo';
+import { getCurrentUser } from '../api/fn/auth/get-current-user';
 import { loginUser } from '../api/fn/auth/login-user';
 import { logoutUser } from '../api/fn/auth/logout-user';
 import { refreshToken } from '../api/fn/auth/refresh-token';
 import { registerUser } from '../api/fn/auth/register-user';
+import { updateCurrentUser as updateCurrentUserApi } from '../api/fn/auth/update-current-user';
+import { uploadUserLogo } from '../api/fn/auth/upload-user-logo';
 import { AuthResponse } from '../api/models/auth-response';
 import { TokenPair } from '../api/models/token-pair';
+import { UpdateUserRequest } from '../api/models/update-user-request';
 import { User } from '../api/models/user';
 
 /**
@@ -24,6 +31,7 @@ const REFRESH_TOKEN_KEY = 'invoiceapp.refresh_token';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly api = inject(Api);
+  private readonly config = inject(ApiConfiguration);
 
   /** Access token, in memory only. Exposed read-only; mutated via the methods below. */
   private readonly _accessToken = signal<string | null>(null);
@@ -112,6 +120,49 @@ export class AuthService {
       this.clearSession();
       throw error;
     }
+  }
+
+  /**
+   * Reactive resource for `GET /auth/me`, the signed-in user's business profile.
+   * The URL is composed from the generated `getCurrentUser.PATH` so it stays in
+   * sync with the spec. The profile page uses this rather than {@link currentUser}
+   * because the in-memory user is only set on login/register — a silent
+   * `/auth/refresh` returns just a token pair — so after a reload it can be stale
+   * or absent. Must be created from an injection context (a component field).
+   */
+  currentUserResource() {
+    return httpResource<User>(() => `${this.config.rootUrl}${getCurrentUser.PATH}`);
+  }
+
+  /**
+   * `PATCH /auth/me`. On `200`, updates the in-memory {@link currentUser} with the
+   * server's response so the nav bar and any other consumer reflect the change
+   * immediately without a reload, then resolves with the updated `User`.
+   */
+  async updateCurrentUser(body: UpdateUserRequest): Promise<User> {
+    const user = await this.api.invoke(updateCurrentUserApi, { body });
+    this._currentUser.set(user);
+    return user;
+  }
+
+  /**
+   * `POST /auth/me/logo` — upload a logo image (multipart). The backend stores the
+   * bytes server-side and returns the updated `User` with `logo_url` pointing at a
+   * short, browser-loadable retrieval URL; this persists immediately (independent of
+   * {@link updateCurrentUser}). Updates the in-memory user so the nav/preview reflect
+   * it right away.
+   */
+  async uploadLogo(file: File): Promise<User> {
+    const user = await this.api.invoke(uploadUserLogo, { body: { file } });
+    this._currentUser.set(user);
+    return user;
+  }
+
+  /** `DELETE /auth/me/logo` — remove the stored logo and clear `logo_url`. Returns the updated `User`. */
+  async deleteLogo(): Promise<User> {
+    const user = await this.api.invoke(deleteUserLogo);
+    this._currentUser.set(user);
+    return user;
   }
 
   private applyAuthResponse(response: AuthResponse): void {
