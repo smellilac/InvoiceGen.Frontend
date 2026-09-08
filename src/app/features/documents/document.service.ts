@@ -14,8 +14,13 @@ import { Document } from '../../api/models/document';
 import { DocumentList } from '../../api/models/document-list';
 import { SendDocumentRequest } from '../../api/models/send-document-request';
 
-/** Backend default when `per_page` is omitted (see openapi.yaml `GET /documents`). */
-export const DEFAULT_PER_PAGE = 20;
+/**
+ * Display fallback for page size before the first response resolves. Matches the
+ * backend's default `per_page` (see openapi.yaml `GET /documents`) so the UI
+ * shows the right size up front; the request itself omits `per_page` and lets
+ * the backend default apply, so the two never drift.
+ */
+export const DEFAULT_PER_PAGE = 10;
 
 /** Backend cap on `per_page`; larger values are clamped before the request. */
 export const MAX_PER_PAGE = 30;
@@ -44,8 +49,9 @@ export class DocumentService {
    * injection context (e.g. a component field initializer).
    *
    * Supports the query params the backend defines — `type`, `customer_id`,
-   * `page`, `per_page`. `per_page` defaults to {@link DEFAULT_PER_PAGE} and is
-   * clamped to {@link MAX_PER_PAGE}. `customer_id` isn't wired up in the UI yet
+   * `page`, `per_page`. `per_page` is only sent when a caller sets one (clamped
+   * to {@link MAX_PER_PAGE}); omit it to let the backend default apply.
+   * `customer_id` isn't wired up in the UI yet
    * (the customers feature doesn't exist), but is accepted here so adding it
    * later needs no service change.
    */
@@ -54,10 +60,14 @@ export class DocumentService {
       () => {
         const p = params();
         // Only defined params go on the wire, to keep the URL clean and cache-friendly.
+        // `per_page` is omitted unless a caller sets one, so the backend's default
+        // governs page size and the two stay in sync automatically.
         const query: Record<string, string | number> = {
           page: p.page ?? 1,
-          per_page: Math.min(p.per_page ?? DEFAULT_PER_PAGE, MAX_PER_PAGE),
         };
+        if (p.per_page !== undefined) {
+          query['per_page'] = Math.min(p.per_page, MAX_PER_PAGE);
+        }
         if (p.type) {
           query['type'] = p.type;
         }
