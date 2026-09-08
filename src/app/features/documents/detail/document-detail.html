@@ -73,6 +73,12 @@
     }
 
     <mat-card appearance="outlined">
+      @if (document.logo_url) {
+        <figure class="detail-logo">
+          <img [src]="document.logo_url" alt="Logo on this document" />
+          <figcaption>This logo will appear on the PDF.</figcaption>
+        </figure>
+      }
       <mat-card-content class="detail-grid">
         <div class="detail-field">
           <span class="detail-label">Bill to</span>

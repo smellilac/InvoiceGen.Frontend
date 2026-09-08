@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -46,6 +47,7 @@ const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'INR
     RouterLink,
     MatButtonModule,
     MatCardModule,
+    MatCheckboxModule,
     MatDatepickerModule,
     MatFormFieldModule,
     MatIconModule,
@@ -90,6 +92,21 @@ export class DocumentCreate {
   /** Guards the one-shot prefill so user edits aren't clobbered by a later resource emission. */
   private prefilled = false;
 
+  /**
+   * The signed-in user's profile (`GET /auth/me`), used to decide whether the
+   * "include my logo" toggle is meaningful. We read it via the resource rather
+   * than {@link AuthService.currentUser} because the in-memory user isn't
+   * populated on a fresh page load (see the resource's doc comment) — this way
+   * a hard-refresh onto `/documents/new` still knows about the profile logo.
+   */
+  private readonly profile = this.auth.currentUserResource();
+  /** True once the profile has a logo the backend can stamp onto the PDF. */
+  protected readonly hasProfileLogo = computed(() => !!this.profile.value()?.logo_url);
+  /** Suppresses the "set a logo" hint until we actually know the profile has none. */
+  protected readonly profileLoading = computed(() => this.profile.isLoading());
+  /** Guards the one-shot create-mode default so it doesn't clobber a user's later toggle. */
+  private logoDefaulted = false;
+
   /** `related_document_number` is meaningful mainly for credit notes (see the spec). */
   protected readonly isCreditNote = computed(() => this.type() === 'credit_note');
 
@@ -122,6 +139,10 @@ export class DocumentCreate {
     shipping_amount: this.fb.control<number | null>(0),
     notes: this.fb.nonNullable.control(''),
     terms: this.fb.nonNullable.control(''),
+    // Mirrors the backend default (`include_logo` defaults to true). In create
+    // mode an effect narrows this to whether the profile actually has a logo; in
+    // edit mode `prefillFrom` sets it from the source document's snapshot.
+    include_logo: this.fb.nonNullable.control(true),
   });
 
   constructor() {
@@ -148,6 +169,19 @@ export class DocumentCreate {
       }
       this.prefilled = true;
       this.prefillFrom(doc);
+    });
+
+    // Create mode only: default the logo toggle to checked when the profile has a
+    // logo, unchecked otherwise, once `GET /auth/me` resolves. Skipped when
+    // editing — there `prefillFrom` seeds it from the source document instead, so
+    // we don't reset a specific document's choice to today's profile default.
+    effect(() => {
+      const user = this.profile.value();
+      if (!user || this.logoDefaulted || this.duplicateFromId()) {
+        return;
+      }
+      this.logoDefaulted = true;
+      this.form.controls.include_logo.setValue(!!user.logo_url);
     });
   }
 
@@ -217,6 +251,11 @@ export class DocumentCreate {
       shipping_amount: doc.shipping_amount ?? 0,
       notes: doc.notes ?? '',
       terms: doc.terms ?? '',
+      // Prefill from whether THIS document was created with a logo — not today's
+      // profile default — since we're editing a specific document's data. (The
+      // toggle only shows if the current profile still has a logo; see the
+      // template's `hasProfileLogo` gate.)
+      include_logo: !!doc.logo_url,
     });
   }
 
@@ -300,6 +339,9 @@ export class DocumentCreate {
       tax_percent: raw.tax_percent ?? 0,
       discount_percent: raw.discount_percent ?? 0,
       shipping_amount: raw.shipping_amount ?? 0,
+      // Harmless when the profile has no logo (the backend ignores it and stores
+      // `logo_url: null` either way), so it's always safe to send the raw value.
+      include_logo: raw.include_logo,
     };
 
     const from = raw.from.trim();

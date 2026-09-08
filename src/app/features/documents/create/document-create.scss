@@ -93,6 +93,22 @@
   align-self: flex-start;
 }
 
+.include-logo {
+  margin-top: 0.25rem;
+}
+
+.include-logo--disabled {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.include-logo-hint {
+  margin: 0 0 0 2rem;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .create-error {
   margin: 0;
   color: var(--mat-sys-error);
