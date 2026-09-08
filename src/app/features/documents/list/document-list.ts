@@ -50,17 +50,22 @@ export class DocumentList {
   /** Current 1-based page and the active type filter (null = all types). */
   protected readonly page = signal(1);
   protected readonly typeFilter = signal<DocumentType | null>(null);
+
+  /**
+   * Page-size fallback shown by the paginator until the first response lands;
+   * afterwards it reflects the `per_page` the backend actually returned.
+   */
   protected readonly perPage = DEFAULT_PER_PAGE;
 
   /**
    * The paginated result. Reads `page`/`typeFilter` reactively, so changing
-   * either refetches. `customer_id` is deliberately left out until the customers
-   * feature exists — the service already accepts it.
+   * either refetches. `per_page` is deliberately omitted so the backend default
+   * governs page size. `customer_id` is left out until the customers feature
+   * exists — the service already accepts both.
    */
   protected readonly documentsPage = this.documents.list(() => ({
     type: this.typeFilter() ?? undefined,
     page: this.page(),
-    per_page: this.perPage,
   }));
 
   /** The 12 document types, for the filter dropdown (name + icon). */
