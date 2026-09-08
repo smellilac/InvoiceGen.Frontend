@@ -1,0 +1,127 @@
+.list-page {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.list-intro {
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0 0 0.25rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+  }
+}
+
+.list-toolbar {
+  margin-bottom: 1rem;
+}
+
+.search-field {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.list-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 1rem;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+
+  .status-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 48px;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.customer-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.customer-row {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 12px;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary, #3f51b5);
+    outline-offset: 2px;
+  }
+}
+
+.customer-row-inner {
+  transition:
+    box-shadow 150ms ease,
+    transform 150ms ease;
+
+  .customer-row:hover & {
+    box-shadow: var(--mat-sys-level2, 0 4px 8px rgba(0, 0, 0, 0.15));
+    transform: translateY(-2px);
+  }
+}
+
+.customer-row-content {
+  display: grid;
+  grid-template-columns: minmax(9rem, 1.5fr) minmax(10rem, 2fr) minmax(7rem, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem 1rem;
+
+  @media (max-width: 40rem) {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+.row-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+}
+
+.row-phone {
+  color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+  white-space: nowrap;
+
+  @media (max-width: 40rem) {
+    display: none;
+  }
+}
+
+.row-chevron {
+  color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+  justify-self: end;
+}

@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { AUTH_ROUTES } from './features/auth/auth.routes';
+import { CUSTOMERS_ROUTES } from './features/customers/customers.routes';
 import { DOCUMENTS_ROUTES } from './features/documents/documents.routes';
 import { authGuard } from './core/auth.guard';
 import { MainLayout } from './shared/main-layout';
@@ -21,11 +22,7 @@ export const routes: Routes = [
           import('./features/documents/picker/document-picker').then((m) => m.DocumentPicker),
       },
       ...DOCUMENTS_ROUTES,
-      {
-        path: 'customers',
-        loadComponent: () =>
-          import('./features/customers/customers-page').then((m) => m.CustomersPage),
-      },
+      ...CUSTOMERS_ROUTES,
       {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile-page').then((m) => m.ProfilePage),
