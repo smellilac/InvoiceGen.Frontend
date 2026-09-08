@@ -238,12 +238,14 @@ export class DocumentDetail {
   }
 
   /**
-   * "Edit" opens the create form pre-filled from this document. It is NOT an
-   * in-place update: submitting there hits `POST /documents` and mints a brand-new
-   * document, leaving this one untouched (see docs/architecture.md — Phase 1 has no
-   * PATCH for documents). We pass the type up front (so the form's heading and
-   * credit-note logic work synchronously) and a `duplicateFrom` id the create form
-   * resolves by fetching `GET /documents/{id}` and mapping it onto the form.
+   * "Edit" opens the create form pre-filled from this document. The backend has no
+   * PATCH for documents (see docs/architecture.md — Phase 1), so this is done as a
+   * copy-and-replace: submitting there `POST`s a corrected copy and then
+   * soft-deletes this original, so the net effect to the user is an in-place edit —
+   * only the corrected version remains in the list. We pass the type up front (so
+   * the form's heading and credit-note logic work synchronously) and a
+   * `duplicateFrom` id the create form resolves by fetching `GET /documents/{id}`
+   * and mapping it onto the form.
    */
   protected edit(): void {
     const document = this.doc.value();

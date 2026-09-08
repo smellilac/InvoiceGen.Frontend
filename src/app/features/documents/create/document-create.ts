@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs/operators';
 
@@ -62,6 +63,7 @@ export class DocumentCreate {
   private readonly auth = inject(AuthService);
   private readonly documents = inject(DocumentService);
   private readonly documentTypes = inject(DocumentTypeService);
+  private readonly snackBar = inject(MatSnackBar);
 
   protected readonly currencies = CURRENCIES;
   protected readonly submitting = signal(false);
@@ -76,8 +78,9 @@ export class DocumentCreate {
   /**
    * Set when arriving via the detail page's "Edit" action
    * (`/documents/new?duplicateFrom=<id>`). We fetch that document and prefill the
-   * form from it — but submitting still `POST`s a brand-new document; this is a
-   * duplicate-to-edit, never an in-place update (see docs/architecture.md).
+   * form from it; on submit we `POST` a corrected copy and then soft-delete this
+   * source, so the user sees an in-place edit even though the backend has no
+   * PATCH for documents (see docs/architecture.md and `submit`).
    */
   private readonly duplicateFromId = toSignal(
     this.route.queryParamMap.pipe(map((params) => params.get('duplicateFrom') ?? undefined)),
@@ -174,11 +177,12 @@ export class DocumentCreate {
   }
 
   /**
-   * Copies a source document's fields onto the form for the "Edit" (duplicate)
-   * flow. Everything the form collects is mapped, including line items — the
-   * `Document` now round-trips them (see the backend's `DocumentDto`). Only the
-   * inputs are copied, never the server-computed totals; those get recomputed on
-   * submit. The result is an unsaved draft: submitting `POST`s a new document.
+   * Copies a source document's fields onto the form for the "Edit" flow.
+   * Everything the form collects is mapped, including line items — the `Document`
+   * now round-trips them (see the backend's `DocumentDto`). Only the inputs are
+   * copied, never the server-computed totals; those get recomputed on submit.
+   * The result is an unsaved draft: submitting `POST`s the corrected copy and
+   * soft-deletes this source (see `submit`).
    */
   private prefillFrom(doc: Document): void {
     // Rebuild the line-item FormArray to match the source (never fewer than one row).
@@ -236,6 +240,25 @@ export class DocumentCreate {
 
     try {
       const doc = await this.documents.create(this.buildRequest(type));
+
+      // In edit mode the new document is the corrected copy, so soft-delete the
+      // source it was edited from — the net effect is an in-place edit. The save
+      // has already succeeded here, so a failed delete must not block navigation
+      // or imply the save failed; it only leaves the original behind, which we
+      // flag as a non-blocking warning so the user can remove it manually.
+      const sourceId = this.duplicateFromId();
+      if (sourceId) {
+        try {
+          await this.documents.delete(sourceId);
+        } catch {
+          this.snackBar.open(
+            'Saved, but couldn’t remove the original document — you may want to delete it manually.',
+            'Dismiss',
+            { duration: 8000 },
+          );
+        }
+      }
+
       // `justCreated` drives the one-time "generated!" banner on the detail page;
       // it rides in router navigation state so it doesn't appear on normal revisits.
       await this.router.navigate(['/documents', doc.id], { state: { justCreated: true } });
