@@ -11,6 +11,7 @@ import { RouterLink } from '@angular/router';
 
 import { DocumentType } from '../../../api/models/document-type';
 import { MoneyPipe } from '../../../shared/currency.pipe';
+import { isOverdue, overdueLabel } from '../../../shared/overdue';
 import { documentTypeIcon, documentTypeNames } from '../document-type-display';
 import { DEFAULT_PER_PAGE, DocumentService } from '../document.service';
 import { DocumentTypeService } from '../document-type.service';
@@ -89,6 +90,10 @@ export class DocumentList {
 
   /** Resolves a document type / icon identifier to a Material Symbols icon. */
   protected readonly iconFor = documentTypeIcon;
+
+  /** Whether a row is past due, and its type-aware badge copy (see shared/overdue). */
+  protected readonly isOverdue = isOverdue;
+  protected readonly overdueLabel = overdueLabel;
 
   /** Canonical display name for a document's type, falling back to the raw enum. */
   protected nameFor(type: DocumentType | undefined): string {

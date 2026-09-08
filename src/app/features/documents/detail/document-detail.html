@@ -105,6 +105,18 @@
 
     <mat-card appearance="outlined">
       <mat-card-content class="totals">
+        @if (isOverdue(document)) {
+          <div class="overdue-summary">
+            <span class="badge badge--overdue">
+              <mat-icon class="badge-icon" aria-hidden="true">error</mat-icon>
+              {{ overdueLabel(document) }}
+            </span>
+            <span class="overdue-context">
+              Due {{ document.due_date | date: 'mediumDate' }} —
+              {{ document.balance_remaining | money: document.currency }} still outstanding
+            </span>
+          </div>
+        }
         <div class="total-row">
           <span>Subtotal</span>
           <span>{{ document.subtotal | money: document.currency }}</span>

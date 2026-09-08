@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,6 +17,7 @@ import { DocumentType } from '../../../api/models/document-type';
 import { SendDocumentRequest } from '../../../api/models/send-document-request';
 import { ConfirmDialog, ConfirmDialogData } from '../../../shared/confirm-dialog';
 import { MoneyPipe } from '../../../shared/currency.pipe';
+import { isOverdue, overdueLabel } from '../../../shared/overdue';
 import { CustomerService } from '../../customers/customer.service';
 import { documentTypeNames } from '../document-type-display';
 import { DocumentService } from '../document.service';
@@ -46,6 +48,7 @@ const SEND_STATUS_POLL_MS = 3000;
     MatMenuModule,
     MatProgressSpinnerModule,
     MoneyPipe,
+    DatePipe,
   ],
   templateUrl: './document-detail.html',
   styleUrl: './document-detail.scss',
@@ -70,6 +73,10 @@ export class DocumentDetail {
   /** Canonical type-to-label lookup from `/document-types` (same as picker/list). */
   private readonly types = this.documentTypes.list();
   private readonly typeNames = computed(() => documentTypeNames(this.types.value()));
+
+  /** Whether this document is past due, and its type-aware badge copy (shared/overdue). */
+  protected readonly isOverdue = isOverdue;
+  protected readonly overdueLabel = overdueLabel;
 
   protected readonly sending = signal(false);
   protected readonly downloading = signal(false);
