@@ -66,6 +66,11 @@ export interface Document {
   last_sent_at?: string | null;
 
   /**
+   * The business logo stamped onto this document's PDF header. A FROZEN snapshot of the user's profile `logo_url` captured when the document was created (only if `include_logo` was true and a profile logo was set) — NOT a live reference to the current profile. Editing or removing the profile logo later never changes this value, for the same point-in-time-record reason as `to` (see `x-customer-policy`). Null if the document was created with no logo (opted out via `include_logo: false`, or no profile logo existed at creation time).
+   */
+  logo_url?: string | null;
+
+  /**
    * Echoes back CreateDocumentRequest.notes exactly as submitted (null if omitted).
    */
   notes?: string | null;

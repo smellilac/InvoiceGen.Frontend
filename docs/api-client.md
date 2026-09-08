@@ -6,7 +6,7 @@ How this app talks to the backend, and how it stays in sync with
 ## Generating types from the spec
 
 Request/response types are **generated, not hand-written**, from the
-backend's `openapi.yaml` (currently v0.8.0). Use `ng-openapi-gen` (or
+backend's `openapi.yaml` (currently v0.10.0). Use `ng-openapi-gen` (or
 `openapi-typescript` if you'd rather generate plain types and write your
 own thin HTTP wrappers):
 

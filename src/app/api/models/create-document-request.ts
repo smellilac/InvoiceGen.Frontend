@@ -32,6 +32,11 @@ export interface CreateDocumentRequest {
    * Billing organization's name/address. Falls back to the user's saved business profile if omitted.
    */
   from?: string;
+
+  /**
+   * Whether to stamp the user's current profile logo (`logo_url`, set via `POST /auth/me/logo`) onto this document. When true (the default) and a profile logo exists, that URL is captured onto the document's `logo_url` AT CREATION TIME as a frozen snapshot — it is never re-read from the profile afterwards (same freeze rule as `to`; see `x-customer-policy`). Set to false to create a document with no logo even when the profile has one. If the profile has no logo, this has no effect and `logo_url` is null either way.
+   */
+  include_logo?: boolean;
   items: Array<LineItem>;
   notes?: string;
 

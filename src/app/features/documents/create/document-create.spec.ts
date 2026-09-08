@@ -32,7 +32,13 @@ describe('DocumentCreate (edit / duplicate-and-replace)', () => {
       getResource: vi.fn().mockReturnValue({ value: () => undefined }),
     };
     const documentTypes = { list: vi.fn().mockReturnValue({ value: () => [] }) };
-    const auth = { currentUser: () => null };
+    const auth = {
+      currentUser: () => null,
+      // Stub the `GET /auth/me` resource the logo toggle reads. No logo, not
+      // loading — enough for construction; the toggle's profile-driven default
+      // is an effect exercised in the browser, not here (see file header).
+      currentUserResource: () => ({ value: () => null, isLoading: () => false }),
+    };
     const router = { navigate: vi.fn().mockResolvedValue(true) };
     const snackBar = { open: vi.fn() };
 
@@ -89,6 +95,9 @@ describe('DocumentCreate (edit / duplicate-and-replace)', () => {
     expect(request.type).toBe('invoice');
     expect(request.to).toBe('Acme Inc');
     expect(request.items).toEqual([{ name: 'Widget', quantity: 2, unit_cost: 5 }]);
+    // The logo choice always rides along in the payload (the backend ignores it
+    // when the profile has no logo).
+    expect(typeof request.include_logo).toBe('boolean');
 
     // (b) ...and the original is soft-deleted so only the copy remains listed.
     expect(documents.delete).toHaveBeenCalledWith('src-1');

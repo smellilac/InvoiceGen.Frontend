@@ -38,6 +38,19 @@
             <mat-error>{{ form.controls.from.getError('server') }}</mat-error>
           }
         </mat-form-field>
+
+        @if (hasProfileLogo()) {
+          <mat-checkbox formControlName="include_logo" class="include-logo">
+            Include my logo on this document.
+          </mat-checkbox>
+        } @else if (!profileLoading()) {
+          <div class="include-logo include-logo--disabled">
+            <mat-checkbox disabled>Include my logo on this document.</mat-checkbox>
+            <p class="include-logo-hint">
+              Set a logo in your <a routerLink="/profile">profile</a> to include it on documents.
+            </p>
+          </div>
+        }
       </mat-card-content>
     </mat-card>
 
