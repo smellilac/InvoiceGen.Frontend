@@ -22,7 +22,7 @@ import { RouterLink } from '@angular/router';
         <a routerLink="/privacy">Privacy Policy</a>
         <a routerLink="/terms">Terms of Service</a>
         <a routerLink="/help">Help</a>
-        <a href="mailto:dimatega@gmail.com">Contact</a>
+        <a href="mailto:axenpartnership@gmail.com">Contact</a>
       </nav>
     </footer>
   `,

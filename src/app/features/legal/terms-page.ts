@@ -217,7 +217,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       <h3>d. Contact</h3>
       <p>
         Questions about these Terms can be sent to
-        <a href="mailto:dimatega@gmail.com">dimatega&#64;gmail.com</a>.
+        <a href="mailto:axenpartnership@gmail.com">axenpartnership&#64;gmail.com</a>.
       </p>
 
       <h2>11. Other Terms</h2>
