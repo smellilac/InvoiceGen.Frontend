@@ -1,0 +1,18 @@
+// Shared layout for the minimal placeholder legal/help pages. Kept in one file
+// (referenced by each page's `styleUrl`) so the three stay visually identical
+// until real content replaces their templates.
+.legal-page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.legal-page h1 {
+  margin: 0 0 0.5rem;
+}
+
+.legal-page p {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}

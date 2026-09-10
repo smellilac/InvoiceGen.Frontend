@@ -1,11 +1,21 @@
+:host {
+  /* The root shell (styles.scss) grows this routed host to fill the space above
+     the shared footer via `flex: 1 0 auto`. Make the host a flex column so the
+     page below can grow into that height with `flex: 1` — rather than a
+     percentage height, which would resolve against the host's flex-derived
+     (non-explicit) height and collapse, leaving the card stuck at the top. */
+  display: flex;
+  flex-direction: column;
+}
+
 .auth-page {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  /* Fill the space the root shell allots above the footer, not the full
-     viewport (which would push the footer below the fold). */
-  min-height: 100%;
+  /* Grow to fill the host (the space above the footer) so the card centres
+     within it, without pushing the footer below the fold. */
+  flex: 1;
   padding: 1rem;
   box-sizing: border-box;
 }

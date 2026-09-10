@@ -40,18 +40,35 @@ body {
 
 // Root app shell as a sticky-footer flex column: the shared <app-footer /> in
 // app.html pins to the bottom of the viewport on short pages (e.g. /login) and
-// is pushed below the content on taller ones (e.g. the document list). The
-// routed page is inserted as the sibling right after <router-outlet>, so it
-// grows to fill the space above the footer. Kept global (not component-scoped)
-// so the selector reliably matches the dynamically inserted routed component,
-// which does not carry app-root's view-encapsulation attribute.
+// is pushed below the content on taller ones (e.g. the document list).
 app-root {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-app-root > router-outlet + * {
+// Persistent flex-grow wrapper around <router-outlet>. It reserves its space in
+// the column at all times — crucially even mid-navigation, when Angular has
+// destroyed the outgoing routed component but not yet rendered the incoming one,
+// so there is momentarily no routed element in the DOM. Anchoring the grow here
+// (a static element) rather than on the transient routed component keeps the
+// footer pinned to the bottom throughout the transition, with nothing to snap
+// between. (A `router-outlet + *` selector would match nothing in that gap,
+// collapsing the area and letting the footer flash up to the top.)
+.app-content {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+// The routed page fills the content wrapper so pages that centre themselves
+// (e.g. the auth pages) have a definite height to centre within. Kept global
+// (not component-scoped) so it reliably matches the dynamically inserted routed
+// component, which does not carry app-root's view-encapsulation attribute. This
+// rule depends on the routed child being present, but only governs that page's
+// own internal layout — not the footer's position, which .app-content above
+// guarantees regardless of content state.
+.app-content > router-outlet + * {
   flex: 1 0 auto;
 }
 
