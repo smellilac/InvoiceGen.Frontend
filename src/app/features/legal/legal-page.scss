@@ -2,7 +2,7 @@
 // (referenced by each page's `styleUrl`) so the three stay visually identical
 // until real content replaces their templates.
 .legal-page {
-  max-width: 40rem;
+  max-width: 54rem;
   margin: 0 auto;
   padding: 4rem 1.5rem;
   box-sizing: border-box;
@@ -15,4 +15,43 @@
 .legal-page p {
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
+  // One step up from the app's default body text (`body-medium`, set on <body>)
+  // for more comfortable long-form reading. Uses the existing type-scale step,
+  // not an ad-hoc size.
+  font: var(--mat-sys-body-large);
+}
+
+// Long-form legal document (e.g. the Terms of Service page). Placeholder legal
+// pages only render an <h1> + <p>, so these rules are inert until real
+// sectioned content lands.
+.legal-doc h2 {
+  margin: 2.5rem 0 0.75rem;
+  padding-top: 2.5rem;
+  // Divider between top-level numbered sections only (not between the lettered
+  // a/b/c subsections, which are <h3>). Suppressed above the first section below.
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  font: var(--mat-sys-title-large);
+}
+
+.legal-doc h2:first-of-type {
+  padding-top: 0;
+  border-top: none;
+}
+
+.legal-doc h3 {
+  margin: 1.5rem 0 0.5rem;
+  font: var(--mat-sys-title-medium);
+}
+
+.legal-doc p {
+  margin: 0 0 1rem;
+  line-height: 1.6;
+}
+
+.legal-doc .legal-meta {
+  margin: 0 0 2rem;
+}
+
+.legal-doc a {
+  color: var(--mat-sys-primary);
 }
