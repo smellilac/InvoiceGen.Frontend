@@ -13,6 +13,8 @@ export type { GetCurrentUser$Params as GetCurrentUser$Params } from './fn/auth/g
 export { getCurrentUser as getCurrentUser } from './fn/auth/get-current-user';
 export type { UpdateCurrentUser$Params as UpdateCurrentUser$Params } from './fn/auth/update-current-user';
 export { updateCurrentUser as updateCurrentUser } from './fn/auth/update-current-user';
+export type { DeleteCurrentUser$Params as DeleteCurrentUser$Params } from './fn/auth/delete-current-user';
+export { deleteCurrentUser as deleteCurrentUser } from './fn/auth/delete-current-user';
 export type { UploadUserLogo$Params as UploadUserLogo$Params } from './fn/auth/upload-user-logo';
 export { uploadUserLogo as uploadUserLogo } from './fn/auth/upload-user-logo';
 export type { DeleteUserLogo$Params as DeleteUserLogo$Params } from './fn/auth/delete-user-logo';

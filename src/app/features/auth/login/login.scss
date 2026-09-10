@@ -51,6 +51,17 @@
   text-align: center;
 }
 
+// Neutral confirmation banner (e.g. "account deleted") — set apart from the
+// form and distinct from the error styling above.
+.auth-notice {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  text-align: center;
+}
+
 .auth-submit {
   align-self: stretch;
 }

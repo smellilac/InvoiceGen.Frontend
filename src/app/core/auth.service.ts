@@ -3,6 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 
 import { Api } from '../api/api';
 import { ApiConfiguration } from '../api/api-configuration';
+import { deleteCurrentUser } from '../api/fn/auth/delete-current-user';
 import { deleteUserLogo } from '../api/fn/auth/delete-user-logo';
 import { getCurrentUser } from '../api/fn/auth/get-current-user';
 import { loginUser } from '../api/fn/auth/login-user';
@@ -100,6 +101,23 @@ export class AuthService {
     } finally {
       this.clearSession();
     }
+  }
+
+  /**
+   * `DELETE /auth/me` — permanently delete the signed-in user's account. On a
+   * successful `204` the backend has soft-deleted the user together with their
+   * documents and customers and revoked every refresh token, so we clear local
+   * auth state exactly the way {@link logout} does (drop the in-memory access
+   * token, remove the refresh token from localStorage).
+   *
+   * Deliberately mirrors nothing of logout's "clear regardless" behaviour: the
+   * clear happens only if the call resolves. On any failure the error propagates
+   * with local state left intact, so a failed delete never strands the user
+   * logged out with their account still live.
+   */
+  async deleteAccount(): Promise<void> {
+    await this.api.invoke(deleteCurrentUser);
+    this.clearSession();
   }
 
   /**

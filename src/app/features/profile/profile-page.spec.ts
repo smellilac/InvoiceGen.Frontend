@@ -1,8 +1,11 @@
 import { vi } from 'vitest';
+import { of } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 
 import { AuthService } from '../../core/auth.service';
 import { User } from '../../api/models/user';
@@ -40,12 +43,23 @@ describe('ProfilePage', () => {
       deleteLogo: vi.fn(),
     };
     const snackBar = { open: vi.fn() };
+    // The delete flow opens a dialog and navigates on confirm; the dialog's
+    // afterClosed() result decides whether navigation happens. Individual tests
+    // set the resolved value via `dialog.__result`.
+    const dialogState: { result: unknown } = { result: undefined };
+    const dialog = {
+      __setResult: (r: unknown) => (dialogState.result = r),
+      open: vi.fn().mockReturnValue({ afterClosed: () => of(dialogState.result) }),
+    };
+    const router = { navigate: vi.fn().mockResolvedValue(true) };
 
     TestBed.configureTestingModule({
       imports: [ProfilePage],
       providers: [
         { provide: AuthService, useValue: auth },
         { provide: MatSnackBar, useValue: snackBar },
+        { provide: MatDialog, useValue: dialog },
+        { provide: Router, useValue: router },
       ],
     });
 
@@ -54,7 +68,7 @@ describe('ProfilePage', () => {
     // Trigger the prefill effect (reads the resource's current value).
     fixture.detectChanges();
 
-    return { fixture, component, auth, snackBar, resource };
+    return { fixture, component, auth, snackBar, resource, dialog, router };
   }
 
   it('prefills the form from the loaded user', () => {
@@ -256,6 +270,26 @@ describe('ProfilePage', () => {
     expect(logoUploadErrorMessage(withDetail)).toBe('Bad image.');
     expect(logoUploadErrorMessage(new HttpErrorResponse({ status: 500 }))).toContain('Could not upload');
     expect(logoUploadErrorMessage(new Error('boom'))).toContain('Could not upload');
+  });
+
+  it('redirects to /login with a deleted flag when the delete dialog confirms', async () => {
+    const { component, dialog, router } = setup({ email: 'user@example.com' });
+    dialog.__setResult(true);
+
+    await component.deleteAccount();
+
+    expect(dialog.open).toHaveBeenCalledTimes(1);
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { deleted: '1' } });
+  });
+
+  it('does not navigate when the delete dialog is dismissed', async () => {
+    const { component, dialog, router } = setup({ email: 'user@example.com' });
+    dialog.__setResult(undefined);
+
+    await component.deleteAccount();
+
+    expect(dialog.open).toHaveBeenCalledTimes(1);
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 
   it('formats created_at as a human date and tolerates missing/invalid values', () => {
