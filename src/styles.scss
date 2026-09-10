@@ -38,6 +38,23 @@ body {
 }
 /* You can add global styles to this file, and also import other style files */
 
+// Root app shell as a sticky-footer flex column: the shared <app-footer /> in
+// app.html pins to the bottom of the viewport on short pages (e.g. /login) and
+// is pushed below the content on taller ones (e.g. the document list). The
+// routed page is inserted as the sibling right after <router-outlet>, so it
+// grows to fill the space above the footer. Kept global (not component-scoped)
+// so the selector reliably matches the dynamically inserted routed component,
+// which does not carry app-root's view-encapsulation attribute.
+app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+app-root > router-outlet + * {
+  flex: 1 0 auto;
+}
+
 // Material Symbols (outlined) helper class. The Google Fonts `css2` endpoint we
 // load in index.html only defines the @font-face, not the ligature helper class
 // that the legacy `icon?family=` endpoint ships, so define it here. `<mat-icon
