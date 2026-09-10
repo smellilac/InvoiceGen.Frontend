@@ -4,17 +4,21 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 
 import { UpdateUserRequest } from '../../api/models/update-user-request';
 import { User } from '../../api/models/user';
 import { ValidationErrorResponse } from '../../api/models/validation-error-response';
 import { AuthService } from '../../core/auth.service';
+import { DeleteAccountDialog } from './delete-account-dialog';
 
 /**
  * A short list of common ISO 4217 codes for the currency picker. Mirrors the
@@ -60,6 +64,8 @@ export class ProfilePage {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
 
   protected readonly currencies = CURRENCIES;
   protected readonly submitting = signal(false);
@@ -202,6 +208,22 @@ export class ProfilePage {
       this.handleError(error);
     } finally {
       this.submitting.set(false);
+    }
+  }
+
+  /**
+   * Opens the "Danger Zone" confirmation dialog. The dialog owns the actual
+   * `DELETE /auth/me` call (so a failure surfaces there with the account intact);
+   * it resolves `true` only once the account is gone and local auth state has been
+   * cleared. On that signal we send the user to `/login` with a `deleted` flag so
+   * the login page can confirm what happened rather than dumping them there cold.
+   */
+  protected async deleteAccount(): Promise<void> {
+    const deleted = await firstValueFrom(
+      this.dialog.open(DeleteAccountDialog, { width: '32rem' }).afterClosed(),
+    );
+    if (deleted) {
+      await this.router.navigate(['/login'], { queryParams: { deleted: '1' } });
     }
   }
 

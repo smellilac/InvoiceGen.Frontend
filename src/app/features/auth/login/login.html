@@ -7,6 +7,9 @@
     </mat-card-header>
 
     <mat-card-content>
+      @if (notice()) {
+        <p class="auth-notice" role="status">{{ notice() }}</p>
+      }
       <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
         <mat-form-field appearance="outline">
           <mat-label>Email</mat-label>

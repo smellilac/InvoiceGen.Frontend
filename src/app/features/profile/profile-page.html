@@ -152,5 +152,27 @@
         </button>
       </div>
     </form>
+
+    <mat-card appearance="outlined" class="danger-zone">
+      <mat-card-header class="section-header">
+        <mat-card-title>Danger zone</mat-card-title>
+        <mat-card-subtitle>
+          Deleting your account permanently removes all your documents, customers,
+          and profile data. This cannot be undone.
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="danger-zone-body">
+        <button
+          mat-stroked-button
+          color="warn"
+          type="button"
+          class="delete-account-button"
+          (click)="deleteAccount()"
+        >
+          <mat-icon>delete_forever</mat-icon>
+          Delete my account
+        </button>
+      </mat-card-content>
+    </mat-card>
   }
 </main>

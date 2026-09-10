@@ -36,6 +36,17 @@ export class Login {
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
 
+  /**
+   * A one-off confirmation shown when the user lands here right after deleting
+   * their account (`/login?deleted=1`), so the redirect isn't a contextless dump
+   * back at the sign-in screen. Read once from the entry snapshot.
+   */
+  protected readonly notice = signal<string | null>(
+    this.route.snapshot.queryParamMap.get('deleted') === '1'
+      ? 'Your account has been permanently deleted.'
+      : null,
+  );
+
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]],

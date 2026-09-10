@@ -112,3 +112,22 @@
   justify-content: flex-end;
   gap: 0.5rem;
 }
+
+// Visually set apart from the editable form above: an error-tinted border and
+// heading signal that actions here are destructive, not routine edits.
+.danger-zone {
+  margin-top: 2.5rem;
+  border-color: var(--mat-sys-error);
+
+  .section-header mat-card-title {
+    color: var(--mat-sys-error);
+  }
+}
+
+.danger-zone-body {
+  display: flex;
+}
+
+.delete-account-button mat-icon {
+  margin-right: 0.25rem;
+}
