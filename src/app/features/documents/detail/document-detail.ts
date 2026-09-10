@@ -13,15 +13,21 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+import { Document } from '../../../api/models/document';
 import { DocumentType } from '../../../api/models/document-type';
 import { SendDocumentRequest } from '../../../api/models/send-document-request';
 import { ConfirmDialog, ConfirmDialogData } from '../../../shared/confirm-dialog';
 import { MoneyPipe } from '../../../shared/currency.pipe';
 import { isOverdue, overdueLabel } from '../../../shared/overdue';
+import { settlementActionLabel } from '../../../shared/settlement';
 import { CustomerService } from '../../customers/customer.service';
 import { documentTypeNames } from '../document-type-display';
 import { DocumentService } from '../document.service';
 import { DocumentTypeService } from '../document-type.service';
+import {
+  RecordSettlementDialog,
+  RecordSettlementDialogData,
+} from './record-settlement-dialog';
 import { SendDocumentDialog, SendDocumentDialogData } from './send-document-dialog';
 
 /** How long to wait after queuing a send before re-fetching `last_send_status`. */
@@ -78,9 +84,13 @@ export class DocumentDetail {
   protected readonly isOverdue = isOverdue;
   protected readonly overdueLabel = overdueLabel;
 
+  /** Type-aware "Record payment" / "Record refund" label (shared/settlement). */
+  protected readonly settlementActionLabel = settlementActionLabel;
+
   protected readonly sending = signal(false);
   protected readonly downloading = signal(false);
   protected readonly deleting = signal(false);
+  protected readonly recordingSettlement = signal(false);
 
   /**
    * Shows the one-time "generated!" banner. Only true right after creation — the
@@ -201,6 +211,42 @@ export class DocumentDetail {
       this.snackBar.open(this.sendErrorMessage(error), 'Dismiss', { duration: 6000 });
     } finally {
       this.sending.set(false);
+    }
+  }
+
+  /**
+   * Opens the record-payment/refund dialog (the dialog itself makes the
+   * `POST /documents/{id}/settlements` call so it can show a `422` inline on the
+   * amount input). On success it returns the updated `Document`, which we push
+   * straight into the resource with `.set()` — no re-fetch — so the totals
+   * redraw immediately. Because the overdue badge is computed live from
+   * `balance_remaining`, a settlement that zeroes the balance makes the badge
+   * disappear on the same update, with no extra wiring here.
+   */
+  protected async recordSettlement(): Promise<void> {
+    const id = this.id();
+    const document = this.doc.value();
+    if (!id || !document || this.recordingSettlement()) {
+      return;
+    }
+
+    this.recordingSettlement.set(true);
+    try {
+      const data: RecordSettlementDialogData = { documentId: id, type: document.type };
+      const updated = await firstValueFrom(
+        this.dialog
+          .open<RecordSettlementDialog, RecordSettlementDialogData, Document | undefined>(
+            RecordSettlementDialog,
+            { data, width: '420px' },
+          )
+          .afterClosed(),
+      );
+      if (updated) {
+        // Reflect the server's new amount_settled/balance_remaining immediately.
+        this.doc.set(updated);
+      }
+    } finally {
+      this.recordingSettlement.set(false);
     }
   }
 

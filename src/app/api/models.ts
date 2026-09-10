@@ -14,6 +14,7 @@ export type { ErrorResponse } from './models/error-response';
 export type { LineItem } from './models/line-item';
 export type { LoginRequest } from './models/login-request';
 export type { MonetaryAmount } from './models/monetary-amount';
+export type { RecordSettlementRequest } from './models/record-settlement-request';
 export type { RegisterRequest } from './models/register-request';
 export type { SendDocumentRequest } from './models/send-document-request';
 export type { TokenPair } from './models/token-pair';

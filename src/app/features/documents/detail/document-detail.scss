@@ -163,6 +163,12 @@
   font: var(--mat-sys-title-medium);
 }
 
+.settlement-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
 .detail-status {
   display: flex;
   flex-direction: column;

@@ -135,6 +135,17 @@
             <span>{{ document.balance_remaining | money: document.currency }}</span>
           </div>
         }
+        <div class="settlement-actions">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="recordingSettlement()"
+            (click)="recordSettlement()"
+          >
+            <mat-icon>payments</mat-icon>
+            {{ settlementActionLabel(document.type) }}
+          </button>
+        </div>
       </mat-card-content>
     </mat-card>
 
