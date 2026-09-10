@@ -43,3 +43,5 @@ export type { DownloadDocumentPdf$Params as DownloadDocumentPdf$Params } from '.
 export { downloadDocumentPdf as downloadDocumentPdf } from './fn/documents/download-document-pdf';
 export type { SendDocument$Params as SendDocument$Params } from './fn/documents/send-document';
 export { sendDocument as sendDocument } from './fn/documents/send-document';
+export type { RecordSettlement$Params as RecordSettlement$Params } from './fn/documents/record-settlement';
+export { recordSettlement as recordSettlement } from './fn/documents/record-settlement';

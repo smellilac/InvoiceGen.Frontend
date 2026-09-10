@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Invoice App API
-  version: "0.10.0"
+  version: "0.11.0"
   description: |
     Original API specification for a new invoicing web app. It is INSPIRED BY
     invoice-generator.com (same idea: fill a form, pick a document type, get a
@@ -19,9 +19,12 @@ info:
          from having accounts, even though it wasn't explicitly requested.
 
     Explicitly OUT of scope for this version (left for a later phase — see the
-    x-future-phases block at the bottom of this file): payment collection/
-    webhooks. (Customers, as of 0.3.0, and emailing documents to customers, as
-    of 0.8.0, are no longer deferred — see below.)
+    x-future-phases block at the bottom of this file): payment COLLECTION via a
+    processor (Stripe etc.) and webhooks. (Customers, as of 0.3.0; emailing
+    documents to customers, as of 0.8.0; and manually RECORDING a settlement
+    against a document, as of 0.11.0, are no longer deferred — see below. The
+    0.11.0 addition is only the "record that money changed hands" half, not
+    processor-driven collection.)
 
     Changelog:
       0.2.0 — Resolved three open design questions from the spec review:
@@ -141,6 +144,22 @@ info:
         - The rendered logo is capped to a modest header box so it can never
           crowd out or obscure the legally required fields (seller info,
           document number, dates, tax breakdown, totals).
+      0.11.0 — Added manual settlement recording (the "record that a payment
+        happened" half of the deferred Payments phase — NOT processor-driven
+        collection, which stays deferred):
+        - Added `POST /documents/{documentId}/settlement`, which applies a
+          delta to the document's `amount_settled` and returns the updated
+          `Document` (with recomputed `balance_remaining`). See
+          `x-settlement-policy.recording_settlements` for direction-by-type,
+          why the amount is a signed delta, and the negative-correction rule.
+        - Added `RecordSettlementRequest` (a single required `amount`, a signed
+          `MonetaryAmount`). A positive amount records money received (or, for
+          `credit_note`, refunded); a negative amount corrects a previous
+          over-entry, since there is no per-payment history to edit.
+        - The endpoint returns `422` (`ValidationErrorResponse`, field
+          `amount`) when the delta would drive `amount_settled` below zero or
+          above `total` — the frontend surfaces this inline on the amount
+          input rather than as a generic banner.
 
 security:
   - BearerAuth: []
@@ -260,6 +279,22 @@ x-settlement-policy:
     money isn't being paid to you, it's being refunded by you. Pre-1.0,
     pre-implementation spec, so this is a plain rename, not a breaking
     migration.
+  recording_settlements: >-
+    `POST /documents/{documentId}/settlement` (added 0.11.0) is how
+    `amount_settled` changes after creation. Its `amount` is a SIGNED DELTA
+    added to the current `amount_settled`, not the new absolute value: a
+    positive amount records more money received (for money-owed-to-you types)
+    or more of the credit refunded (for `credit_note`); a negative amount
+    walks `amount_settled` back down to correct a previous over-entry. A delta
+    is used rather than an absolute set because the natural user action is
+    "another payment came in", and because there is no per-settlement history
+    to edit individually — the correction IS the negative delta. The server
+    clamps the result to `[0, total]`: a delta that would push `amount_settled`
+    below zero or above `total` is rejected with `422` (field `amount`), never
+    silently clamped. `balance_remaining` is always recomputed as
+    `total - amount_settled`, so once a settlement brings `amount_settled` up
+    to `total`, `balance_remaining` is 0 and the document is fully settled
+    (and therefore no longer overdue) regardless of type direction.
 
 x-customer-policy:
   snapshot_not_live_link: >-
@@ -919,6 +954,56 @@ paths:
         '429':
           $ref: '#/components/responses/TooManyRequests'
 
+  /documents/{documentId}/settlement:
+    parameters:
+      - $ref: '#/components/parameters/DocumentId'
+    post:
+      operationId: recordSettlement
+      tags: [documents]
+      summary: Record a payment or refund against a document
+      description: >-
+        Applies a signed delta to this document's `amount_settled` and returns
+        the updated `Document` (with `balance_remaining` recomputed as
+        `total - amount_settled`). A positive `amount` records money received
+        (or, for a `credit_note`, refunded to the customer); a negative
+        `amount` corrects a previous over-entry. There is no per-settlement
+        history — the correction is the negative delta itself. See
+        `x-settlement-policy.recording_settlements` for the full,
+        type-dependent behavior.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordSettlementRequest'
+      responses:
+        '200':
+          description: >-
+            Settlement recorded. Returns the updated `Document` with the new
+            `amount_settled` and recomputed `balance_remaining`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: >-
+            The delta would drive `amount_settled` below zero or above
+            `total`. The offending field is reported under `amount`, so the
+            frontend can surface the message inline on the amount input rather
+            than as a generic banner. (Like every 422 in this API, the live
+            wire body is ASP.NET Core's validation-problem `errors` map keyed
+            by field name, which the frontend reads directly; the
+            `ValidationErrorResponse` schema referenced here is the documented
+            contract the whole spec uses.) See
+            `x-settlement-policy.recording_settlements`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationErrorResponse' }
+
 components:
   securitySchemes:
     BearerAuth:
@@ -1282,6 +1367,22 @@ components:
             Optional free-text note included in the email body. The subject
             line is always auto-generated and not customizable — see
             `x-email-delivery-policy.subject_and_message`.
+
+    RecordSettlementRequest:
+      type: object
+      required: [amount]
+      description: >-
+        Body for `POST /documents/{documentId}/settlement`. See
+        `x-settlement-policy.recording_settlements`.
+      properties:
+        amount:
+          allOf: [{ $ref: '#/components/schemas/MonetaryAmount' }]
+          description: >-
+            Signed delta added to the document's current `amount_settled` —
+            NOT the new absolute value. Positive records money received (or,
+            for `credit_note`, refunded); negative corrects a previous
+            over-entry. Rejected with `422` (field `amount`) if it would push
+            `amount_settled` below zero or above `total`.
 
     Document:
       type: object

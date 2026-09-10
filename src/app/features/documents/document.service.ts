@@ -8,10 +8,12 @@ import { deleteDocument } from '../../api/fn/documents/delete-document';
 import { downloadDocumentPdf } from '../../api/fn/documents/download-document-pdf';
 import { getDocument } from '../../api/fn/documents/get-document';
 import { ListDocuments$Params, listDocuments } from '../../api/fn/documents/list-documents';
+import { recordSettlement } from '../../api/fn/documents/record-settlement';
 import { sendDocument } from '../../api/fn/documents/send-document';
 import { CreateDocumentRequest } from '../../api/models/create-document-request';
 import { Document } from '../../api/models/document';
 import { DocumentList } from '../../api/models/document-list';
+import { RecordSettlementRequest } from '../../api/models/record-settlement-request';
 import { SendDocumentRequest } from '../../api/models/send-document-request';
 
 /**
@@ -118,6 +120,20 @@ export class DocumentService {
    */
   send(id: string, body: SendDocumentRequest): Promise<Document> {
     return this.api.invoke(sendDocument, { documentId: id, body });
+  }
+
+  /**
+   * `POST /documents/{id}/settlements`. Records a payment (or, for a
+   * `credit_note`, a refund) by applying `body.amount` as a SIGNED DELTA to the
+   * document's `amount_settled` — positive to record more, negative to correct
+   * a previous over-entry (see the backend's `x-settlement-policy`). Resolves
+   * on `200` with the updated `Document` (new `amount_settled`, recomputed
+   * `balance_remaining`); the caller can render those directly without a
+   * re-fetch. A `422` (`ValidationErrorResponse`, field `amount`) means the
+   * delta would drive `amount_settled` below zero or above `total`.
+   */
+  recordSettlement(id: string, body: RecordSettlementRequest): Promise<Document> {
+    return this.api.invoke(recordSettlement, { documentId: id, body });
   }
 
   /** `GET /documents/{id}/pdf` — resolves with the PDF as a `Blob`. */
