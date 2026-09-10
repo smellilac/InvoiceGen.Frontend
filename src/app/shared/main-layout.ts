@@ -46,8 +46,10 @@ import { Logo } from './logo';
   `,
   styles: `
     :host {
+      /* Fills the space above the shared footer via the root shell's flex
+         layout (see styles.scss); no own 100vh, which would push the footer
+         below the fold. */
       display: block;
-      min-height: 100vh;
       background: #f8f9fc;
     }
 
