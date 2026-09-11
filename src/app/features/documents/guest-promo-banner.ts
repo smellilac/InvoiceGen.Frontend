@@ -1,69 +1,156 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 
+/** One benefit chip: an outlined symbol plus its short label. */
+interface PromoBenefit {
+  icon: string;
+  label: string;
+}
+
 /**
- * Compact "sign up to unlock more" banner shown to unauthenticated visitors on
- * the picker and the guest document form, regardless of how many free documents
- * they have left. The four benefits are the short form of the Help page's "Why
- * use Invoice-Gen?" list (kept in the same order and voice — see
- * docs/help-page-draft.md); the fuller phrasing is reserved for the
- * exhausted-attempts gate, where the user is most likely to read it.
+ * "Create a free account" promotion shown to unauthenticated visitors on the
+ * picker and the guest document form. One reusable component, two layout
+ * variants that share the same visual language (tinted surface, gift medallion,
+ * radius, typography, iconography, CTA, spacing tokens, and the text/benefits
+ * divider):
  *
- * Feature-internal (used only by the documents picker/create pages), so it lives
- * under `features/documents` rather than `shared/`.
+ * - `full` (default) — a slim single-row horizontal banner for wide pages (the
+ *   picker): gift medallion + headline/description on the left, a subtle vertical
+ *   divider, the benefits in one horizontal row, then the CTA on the right.
+ * - `compact` — the same system recomposed for a narrow column (the create
+ *   form): medallion + headline/description on top, a horizontal divider, a 2×2
+ *   benefits grid, and a full-width CTA. Not a scaled-down `full`.
+ *
+ * Messaging, CTA target, and the four benefits are unchanged — the short form of
+ * the Help page's "Why use Invoice-Gen?" list, in the same order and voice (see
+ * docs/help-page-draft.md). Feature-internal (only the documents picker/create
+ * pages use it), so it lives under `features/documents` rather than `shared/`.
  */
 @Component({
   selector: 'app-guest-promo-banner',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, MatButtonModule, MatIconModule],
   template: `
-    <aside class="guest-promo" aria-label="Benefits of creating an account">
-      <div class="guest-promo-text">
-        <p class="guest-promo-lead">Create a free account to unlock:</p>
-        <ul class="guest-promo-benefits">
-          <li><mat-icon aria-hidden="true">history</mat-icon>Document history</li>
-          <li><mat-icon aria-hidden="true">group</mat-icon>Saved customers</li>
-          <li><mat-icon aria-hidden="true">badge</mat-icon>Business profile</li>
-          <li><mat-icon aria-hidden="true">mail</mat-icon>Email sending</li>
+    @if (variant() === 'compact') {
+      <aside class="promo promo--compact" aria-label="Benefits of creating an account">
+        <div class="promo-head">
+          <span class="promo-medallion" aria-hidden="true">
+            <mat-icon fontSet="material-symbols-outlined">redeem</mat-icon>
+          </span>
+          <div class="promo-lead">
+            <h3 class="promo-title">Create a free account</h3>
+            <p class="promo-sub">It's free, no credit card.</p>
+          </div>
+        </div>
+        <span class="promo-divider" aria-hidden="true"></span>
+        <ul class="promo-benefits">
+          @for (benefit of benefits; track benefit.label) {
+            <li>
+              <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">{{
+                benefit.icon
+              }}</mat-icon>
+              <span>{{ benefit.label }}</span>
+            </li>
+          }
         </ul>
-      </div>
-      <a mat-flat-button color="primary" class="guest-promo-cta" routerLink="/register">
-        Sign up free
-      </a>
-    </aside>
+        <a mat-flat-button color="primary" class="promo-cta" routerLink="/register">
+          <span>Sign up free</span>
+          <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">arrow_forward</mat-icon>
+        </a>
+      </aside>
+    } @else {
+      <aside class="promo promo--full" aria-label="Benefits of creating an account">
+        <div class="promo-main">
+          <span class="promo-medallion" aria-hidden="true">
+            <mat-icon fontSet="material-symbols-outlined">redeem</mat-icon>
+          </span>
+          <div class="promo-lead">
+            <h3 class="promo-title">Create a free account</h3>
+            <p class="promo-sub">It's free, no credit card.</p>
+          </div>
+          <span class="promo-divider" aria-hidden="true"></span>
+          <ul class="promo-benefits">
+            @for (benefit of benefits; track benefit.label) {
+              <li>
+                <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">{{
+                  benefit.icon
+                }}</mat-icon>
+                <span>{{ benefit.label }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+        <a mat-flat-button color="primary" class="promo-cta" routerLink="/register">
+          <span>Sign up free</span>
+          <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">arrow_forward</mat-icon>
+        </a>
+      </aside>
+    }
   `,
   styles: `
-    .guest-promo {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem 1.5rem;
-      padding: 0.875rem 1.25rem;
-      background: #eef1fe;
-      border: 1px solid #d7ddfb;
-      border-radius: 12px;
+    :host {
+      display: block;
+
+      /* Shared design tokens — both variants read these so they stay in lockstep. */
+      --promo-accent: #4f46e5; /* indigo-600: medallion icon */
+      --promo-ink: #1f2340; /* strong heading ink */
+      --promo-muted: #5b6478; /* supporting sentence */
+      --promo-benefit: #5c6480; /* benefit labels (secondary) */
+      --promo-benefit-icon: #9aa3c4; /* muted icons keep benefits secondary */
+      --promo-divider: #dbe0f4; /* hairline between text and benefits */
+      --promo-radius: 16px;
     }
 
-    .guest-promo-text {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.5rem 1rem;
+    .promo {
+      /* Very light indigo-tinted surface, a subtle hairline border, and only a
+         whisper of shadow — reads as part of the product UI, not an ad. */
+      background: linear-gradient(135deg, #f8f9ff 0%, #eef1fe 100%);
+      border: 1px solid #e4e8fb;
+      border-radius: var(--promo-radius);
+      box-shadow: 0 1px 2px rgba(31, 35, 64, 0.04);
     }
 
-    .guest-promo-lead {
+    .promo-medallion {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      background: #e6e9ff;
+      color: var(--promo-accent);
+
+      mat-icon {
+        font-size: 23px;
+        width: 23px;
+        height: 23px;
+      }
+    }
+
+    .promo-lead {
+      min-width: 0;
+    }
+
+    .promo-title {
       margin: 0;
+      color: var(--promo-ink);
+      font-size: 1.0625rem;
       font-weight: 600;
-      color: #303a63;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
     }
 
-    .guest-promo-benefits {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem 1.25rem;
+    .promo-sub {
+      margin: 0.125rem 0 0;
+      color: var(--promo-muted);
+      font-size: 0.875rem;
+      line-height: 1.35;
+    }
+
+    .promo-benefits {
       margin: 0;
       padding: 0;
       list-style: none;
@@ -71,34 +158,139 @@ import { RouterLink } from '@angular/router';
       li {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
-        color: #4b5573;
-        font-size: 0.9375rem;
+        gap: 0.3rem;
+        color: var(--promo-benefit);
+        font-size: 0.75rem;
+        white-space: nowrap;
       }
+
+      mat-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+        color: var(--promo-benefit-icon);
+      }
+    }
+
+    .promo-divider {
+      flex: 0 0 auto;
+      background: var(--promo-divider);
+      border-radius: 1px;
+    }
+
+    .promo-cta {
+      flex: 0 0 auto;
+      --mdc-filled-button-container-height: 40px;
+      border-radius: 10px;
+      font-weight: 600;
+      letter-spacing: 0;
 
       mat-icon {
         font-size: 1.125rem;
         width: 1.125rem;
         height: 1.125rem;
-        color: #5b6bd6;
+        margin: 0 -0.25rem 0 0.375rem;
       }
     }
 
-    .guest-promo-cta {
-      flex: 0 0 auto;
-      border-radius: 8px;
-      font-weight: 600;
+    /* ---- Variant: slim full-width horizontal banner ---------------------- */
+    .promo--full {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      padding: 0.875rem 1.25rem;
     }
 
-    @media (max-width: 600px) {
-      .guest-promo {
-        justify-content: stretch;
+    .promo--full .promo-main {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+    }
+
+    .promo--full .promo-divider {
+      align-self: stretch;
+      width: 1px;
+      margin: 0.125rem 0;
+    }
+
+    .promo--full .promo-benefits {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem 0.75rem;
+    }
+
+    /* ---- Variant: compact card ------------------------------------------- */
+    .promo--compact {
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+      padding: 1.25rem 1.25rem 1.375rem;
+    }
+
+    .promo--compact .promo-head {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .promo--compact .promo-divider {
+      width: 100%;
+      height: 1px;
+    }
+
+    .promo--compact .promo-benefits {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.625rem 1rem;
+    }
+
+    .promo--compact .promo-cta {
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* Below this width the single-row banner can't hold everything, so the full
+       variant stacks: text on top, benefits wrap beneath, full-width CTA. The
+       vertical divider is meaningless once stacked, so it's hidden. */
+    @media (max-width: 720px) {
+      .promo--full {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.875rem;
+        padding: 1.25rem;
       }
 
-      .guest-promo-cta {
-        flex: 1 1 100%;
+      .promo--full .promo-main {
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
+      }
+
+      .promo--full .promo-divider {
+        display: none;
+      }
+
+      .promo--full .promo-benefits {
+        flex-basis: 100%;
+      }
+
+      .promo--full .promo-cta {
+        width: 100%;
+        justify-content: center;
       }
     }
   `,
 })
-export class GuestPromoBanner {}
+export class GuestPromoBanner {
+  /** Layout variant: `full` horizontal banner (default) or `compact` card. */
+  readonly variant = input<'full' | 'compact'>('full');
+
+  /** The four benefits, shared by both variants (order matches the Help page). */
+  protected readonly benefits: PromoBenefit[] = [
+    { icon: 'history', label: 'Document history' },
+    { icon: 'group', label: 'Saved customers' },
+    { icon: 'badge', label: 'Business profile' },
+    { icon: 'mail', label: 'Email sending' },
+  ];
+}

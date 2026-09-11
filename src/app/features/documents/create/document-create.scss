@@ -135,10 +135,11 @@
   }
 }
 
-/* Compact promo banner between the header and the guest form. */
+/* Compact promo card between the header and the guest form — a clear gap below
+   keeps it visually separate from the form fields it sits above. */
 .create-header + app-guest-promo-banner {
   display: block;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 /* Sign-up nudge shown to guests where the saved-customer picker would be. */

@@ -16,7 +16,7 @@
         }
       </p>
 
-      <app-guest-promo-banner />
+      <app-guest-promo-banner variant="compact" />
 
       @if (guestRemaining() > 0) {
         <div class="guest-result-actions">
@@ -83,7 +83,7 @@
     </div>
 
     @if (isGuest()) {
-      <app-guest-promo-banner />
+      <app-guest-promo-banner variant="compact" />
     }
 
     <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
