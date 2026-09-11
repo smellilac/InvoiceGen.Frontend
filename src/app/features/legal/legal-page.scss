@@ -8,6 +8,22 @@
   box-sizing: border-box;
 }
 
+// "Way back" home affordance for the legal/help pages. These pages render
+// outside the app shell (see `legal.routes.ts`), so they have no header nav —
+// this link is the only way back to the document picker without editing the URL.
+.legal-back {
+  display: inline-block;
+  margin-bottom: 2rem;
+  color: var(--mat-sys-primary);
+  text-decoration: none;
+  font: var(--mat-sys-body-medium);
+}
+
+.legal-back:hover,
+.legal-back:focus-visible {
+  text-decoration: underline;
+}
+
 .legal-page h1 {
   margin: 0 0 0.5rem;
 }
