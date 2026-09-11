@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 /**
  * The Help page (public route `/help`, linked from the app-wide footer). Static
@@ -10,8 +11,10 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
   selector: 'app-help-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterLink],
   template: `
     <main class="legal-page legal-doc">
+      <a class="legal-back" routerLink="/">← Back to Invoice-Gen</a>
       <h1>Help</h1>
 
       <p>
