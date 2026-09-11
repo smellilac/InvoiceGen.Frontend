@@ -57,7 +57,6 @@ interface PromoBenefit {
         </ul>
         <a mat-flat-button color="primary" class="promo-cta" routerLink="/register">
           <span>Sign up free</span>
-          <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">arrow_forward</mat-icon>
         </a>
       </aside>
     } @else {
