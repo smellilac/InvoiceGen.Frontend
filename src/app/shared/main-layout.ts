@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
@@ -7,10 +8,16 @@ import { AuthService } from '../core/auth.service';
 import { Logo } from './logo';
 
 /**
- * Persistent shell for every protected route. Renders the app-wide navigation
- * header (logo + primary links + Log out) once and hosts the active page in a
- * `<router-outlet />` below it, so no feature page has to draw its own header.
- * Wired as the parent route around all protected children in `app.routes.ts`.
+ * Persistent shell for the whole app. Renders the app-wide navigation header
+ * (logo + primary links + a right-hand auth slot) once and hosts the active
+ * page in a `<router-outlet />` below it, so no feature page draws its own
+ * header. Wired as the parent route around every child in `app.routes.ts`.
+ *
+ * The primary nav is identical for guests and signed-in users — so the app
+ * never looks like it has fewer features when signed out. Account-only areas
+ * carry a small lock for guests; clicking one still hits the auth guard, which
+ * redirects to /login (unchanged). Only the right-hand slot varies with auth
+ * state: Log in / Sign up for a guest, Log out for a signed-in user.
  */
 @Component({
   selector: 'app-main-layout',
@@ -21,6 +28,7 @@ import { Logo } from './logo';
     RouterLinkActive,
     MatToolbarModule,
     MatButtonModule,
+    MatIconModule,
     Logo,
   ],
   template: `
@@ -31,25 +39,30 @@ import { Logo } from './logo';
 
       <span class="nav-spacer"></span>
 
-      @if (isAuthenticated()) {
-        <nav class="nav-links" aria-label="Primary">
-          <a mat-button routerLink="/documents" routerLinkActive="nav-link-active">Documents</a>
-          <a mat-button routerLink="/customers" routerLinkActive="nav-link-active">Customers</a>
-          <a mat-button routerLink="/profile" routerLinkActive="nav-link-active">Profile</a>
-        </nav>
+      <nav class="nav-links" aria-label="Primary">
+        @for (item of navItems; track item.link) {
+          <a mat-button [routerLink]="item.link" routerLinkActive="nav-link-active">
+            {{ item.label }}
+            @if (item.gated && !isAuthenticated()) {
+              <mat-icon
+                class="nav-lock"
+                fontSet="material-symbols-outlined"
+                aria-label="requires an account"
+                >lock</mat-icon
+              >
+            }
+          </a>
+        }
+      </nav>
 
+      @if (isAuthenticated()) {
         <button mat-stroked-button class="logout-button" type="button" (click)="logout()">
           Log out
         </button>
       } @else {
-        <!-- Signed-out shell (the public picker / guest document form): the
-             primary nav points at account-only areas, so instead offer the two
-             ways in. -->
-        <nav class="nav-links" aria-label="Account">
-          <a mat-button routerLink="/help" routerLinkActive="nav-link-active">Help</a>
-          <a mat-button routerLink="/login" routerLinkActive="nav-link-active">Log in</a>
-        </nav>
-
+        <a mat-button class="login-button" routerLink="/login" routerLinkActive="nav-link-active">
+          Log in
+        </a>
         <a mat-flat-button color="primary" class="signup-button" routerLink="/register">
           Sign up
         </a>
@@ -108,6 +121,27 @@ import { Logo } from './logo';
         font-weight: 600;
         background: #eef1fe;
       }
+    }
+
+    /* Small "gated behind sign-up" cue on account-only nav items, shown only to
+       guests. Muted and compact so it reads as a hint, not a warning. */
+    .nav-lock {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-left: 0.3rem;
+      vertical-align: middle;
+      color: #9aa1b1;
+    }
+
+    /* Signed-out secondary action: styled to sit next to the Sign up CTA and
+       echo the muted nav links rather than compete with the primary button. */
+    .login-button {
+      --mdc-text-button-container-height: 40px;
+      color: #4b5563;
+      font-weight: 500;
+      font-size: 1.0625rem;
+      border-radius: 8px;
     }
 
     /* Secondary action: kept as an outlined pill so it reads as distinct from
@@ -170,8 +204,21 @@ export class MainLayout {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  /** Drives the nav: full app links + Log out when signed in, Log in / Sign up when not. */
+  /** Toggles the right-hand slot (Log in / Sign up vs Log out) and the per-item
+   * lock cue. The primary links themselves render the same either way. */
   protected readonly isAuthenticated = this.auth.isAuthenticated;
+
+  /**
+   * The shared primary nav — identical for guests and signed-in users. `gated`
+   * marks the account-only areas that show a lock for guests and whose route
+   * guard redirects an unauthenticated click to /login.
+   */
+  protected readonly navItems: ReadonlyArray<{ label: string; link: string; gated: boolean }> = [
+    { label: 'Documents', link: '/documents', gated: true },
+    { label: 'Customers', link: '/customers', gated: true },
+    { label: 'Profile', link: '/profile', gated: true },
+    { label: 'Help', link: '/help', gated: false },
+  ];
 
   protected async logout(): Promise<void> {
     await this.auth.logout();
