@@ -8,11 +8,38 @@ API described in `invoiceapp`'s `docs/openapi.yaml` — this repo has no
 business logic of its own beyond form handling and rendering; the backend
 is the source of truth for money math, rounding, and validation.
 
-**Status: Planning complete, implementation starting.** Steps 1–2 of the
-build plan are done (project scaffolding + generated API types); this repo
-was created at that point. Update this file and `docs/` as real
-implementation choices land — don't let them go stale once code exists,
-same rule the backend repo follows.
+**Status: Actively built out — the core product is implemented and
+working.** What exists today (verify against the code before trusting this
+list — keep it honest):
+
+- **Auth** — register, login, logout, JWT access/refresh with an HTTP
+  interceptor and a route guard on the protected subtree
+  (`core/auth.*`, `features/auth/`).
+- **Profile / business settings** (`/profile`) — edit the fields that
+  pre-fill new documents (business name/address, default currency) and
+  upload/remove a logo, via `GET`/`PATCH /auth/me` and the logo endpoints.
+- **Account deletion** — "Delete my account" with a typed-confirmation
+  dialog, hitting `DELETE /auth/me` (`features/profile/`).
+- **Documents** — the full lifecycle across 12 document types: a type
+  picker (`/`), a create form (`documents/new`), a paginated history list
+  filterable by type and by customer (`/documents`), and a detail view
+  (`/documents/:id`) that recomputes nothing — it renders backend values
+  and offers **Download PDF**, **email Send** (with post-send status
+  polling of `last_send_status`/`last_send_error`), **Delete**, and
+  **Record settlement** (payment/refund), plus type-aware overdue badges.
+- **Customers** — full CRUD: list, detail, create, edit, delete
+  (`features/customers/`).
+- **Guest / unauthenticated generation** — signed-out visitors can fill
+  the create form and download a PDF via `POST /documents/guest` (nothing
+  saved), gated by a soft client-side free-document limit that then shows a
+  sign-up prompt (`features/documents/guest-attempts.service.ts`).
+- **Informational pages** — a hand-authored **Terms of Service** (`/terms`)
+  and **Help** (`/help`) page with real content, plus a **Privacy Policy**
+  (`/privacy`) that is still a "coming soon" placeholder. All three are
+  public, linked from the footer.
+
+Update this file and `docs/` as real implementation choices land — don't
+let them go stale once code exists, same rule the backend repo follows.
 
 ## Tech stack
 
