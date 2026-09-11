@@ -84,7 +84,6 @@ interface PromoBenefit {
         </div>
         <a mat-flat-button color="primary" class="promo-cta" routerLink="/register">
           <span>Sign up free</span>
-          <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">arrow_forward</mat-icon>
         </a>
       </aside>
     }
@@ -197,7 +196,7 @@ interface PromoBenefit {
     .promo--full {
       display: flex;
       align-items: center;
-      gap: 0.875rem;
+      gap: 0.75rem;
       padding: 0.875rem 1.25rem;
     }
 
@@ -206,7 +205,12 @@ interface PromoBenefit {
       min-width: 0;
       display: flex;
       align-items: center;
-      gap: 0.875rem;
+      gap: 0.75rem;
+    }
+
+    /* Keep the headline on one line; it never needs to shrink away for space. */
+    .promo--full .promo-title {
+      white-space: nowrap;
     }
 
     .promo--full .promo-divider {
@@ -217,8 +221,15 @@ interface PromoBenefit {
 
     .promo--full .promo-benefits {
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.375rem 0.75rem;
+      flex-wrap: nowrap;
+      gap: 0.375rem 0.625rem;
+
+      /* Slightly larger benefit labels on the full (picker) banner only — the
+         compact variant keeps the base size. nowrap plus the tightened gaps
+         above guarantee all four stay on one row at the picker's width. */
+      li {
+        font-size: 0.8rem;
+      }
     }
 
     /* ---- Variant: compact card ------------------------------------------- */
@@ -251,10 +262,12 @@ interface PromoBenefit {
       justify-content: center;
     }
 
-    /* Below this width the single-row banner can't hold everything, so the full
-       variant stacks: text on top, benefits wrap beneath, full-width CTA. The
-       vertical divider is meaningless once stacked, so it's hidden. */
-    @media (max-width: 720px) {
+    /* The single-row banner only has room for one line of benefits at the
+       picker's full width (the picker caps at 60rem, so that's the widest the
+       banner ever gets). Below that the benefits can't stay nowrap without
+       overflowing, so the full variant stacks: text on top, benefits wrap
+       beneath, full-width CTA. The vertical divider is meaningless once stacked. */
+    @media (max-width: 60rem) {
       .promo--full {
         flex-direction: column;
         align-items: stretch;
@@ -267,12 +280,17 @@ interface PromoBenefit {
         gap: 0.75rem 1rem;
       }
 
+      .promo--full .promo-title {
+        white-space: normal;
+      }
+
       .promo--full .promo-divider {
         display: none;
       }
 
       .promo--full .promo-benefits {
         flex-basis: 100%;
+        flex-wrap: wrap;
       }
 
       .promo--full .promo-cta {
