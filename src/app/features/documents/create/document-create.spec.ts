@@ -98,6 +98,23 @@ describe('DocumentCreate (edit / duplicate-and-replace)', () => {
     });
   });
 
+  it('an invalid submit blocks, warns, and marks fields touched instead of failing silently', async () => {
+    const { component, documents, snackBar } = setup({ type: 'invoice' });
+    // Make the form invalid: an out-of-view required field left empty is the
+    // whole point — clicking Create must not silently do nothing.
+    component.form.controls.to.setValue('');
+
+    await component.submit();
+
+    // Nothing is sent...
+    expect(documents.create).not.toHaveBeenCalled();
+    // ...the user is told plainly what's wrong via the toast...
+    expect(snackBar.open).toHaveBeenCalledTimes(1);
+    expect(snackBar.open.mock.calls[0][0]).toContain('required fields');
+    // ...and every field's error styling is revealed, not just touched ones.
+    expect(component.form.controls.to.touched).toBe(true);
+  });
+
   it('edit mode saves the corrected copy, then soft-deletes the source', async () => {
     const { component, documents, router } = setup({
       type: 'invoice',

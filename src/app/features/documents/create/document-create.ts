@@ -1,5 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -40,6 +48,10 @@ const CUSTOMER_SEARCH_DEBOUNCE_MS = 300;
 
 /** Shown when a guest clicks a result-view action that requires an account. */
 const GUEST_LOCKED_MESSAGE = 'To unlock this feature, create an account or sign in.';
+
+/** Shown on a submit attempt while the form still has missing/invalid fields. */
+const INVALID_FORM_MESSAGE =
+  'Please fill in all required fields correctly before creating this document.';
 
 /**
  * The in-memory result of a successful guest creation. Nothing is persisted for a
@@ -102,6 +114,7 @@ export class DocumentCreate {
   private readonly documentTypes = inject(DocumentTypeService);
   private readonly guestAttempts = inject(GuestAttemptsService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   protected readonly currencies = CURRENCIES;
   protected readonly submitting = signal(false);
@@ -479,7 +492,14 @@ export class DocumentCreate {
       return;
     }
     if (this.form.invalid) {
+      // Reveal every invalid field's error styling (not just the ones the user
+      // has already touched), tell them plainly what's wrong via the same toast
+      // we use for other user-facing messages, and jump them to the first bad
+      // field — otherwise a required field scrolled far out of view in a long
+      // form makes the submit look like it silently did nothing.
       this.form.markAllAsTouched();
+      this.snackBar.open(INVALID_FORM_MESSAGE, 'Dismiss', { duration: 6000 });
+      this.focusFirstInvalidField();
       return;
     }
 
@@ -503,6 +523,26 @@ export class DocumentCreate {
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  /**
+   * Moves the user to the first invalid control after a blocked submit. Querying
+   * the live DOM (rather than walking the model) lets the *topmost* invalid field
+   * win regardless of which card it sits in, so scroll-and-focus always lands on
+   * the first thing the user would see. `[formControlName]` narrows the match to
+   * real controls — the invalid `ng-invalid` classes Angular also puts on the
+   * wrapping form/array groups are skipped. Its red error styling is already
+   * showing thanks to `markAllAsTouched` above.
+   */
+  private focusFirstInvalidField(): void {
+    const firstInvalid = this.host.nativeElement.querySelector<HTMLElement>(
+      '[formControlName].ng-invalid',
+    );
+    if (!firstInvalid) {
+      return;
+    }
+    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    firstInvalid.focus({ preventScroll: true });
   }
 
   /**
