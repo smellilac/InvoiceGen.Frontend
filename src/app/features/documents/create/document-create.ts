@@ -11,6 +11,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -37,6 +38,27 @@ const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'INR
 /** Debounce before a keystroke in the customer autocomplete turns into a request. */
 const CUSTOMER_SEARCH_DEBOUNCE_MS = 300;
 
+/** Shown when a guest clicks a result-view action that requires an account. */
+const GUEST_LOCKED_MESSAGE = 'To unlock this feature, create an account or sign in.';
+
+/**
+ * The in-memory result of a successful guest creation. Nothing is persisted for a
+ * guest (there is no saved document and no id), so we hold the rendered PDF blob
+ * and a snapshot of the submitted fields here to drive the detail-styled result
+ * view — the Download action re-saves this blob with no new network call. Purely
+ * local UI state: never stored or restored across navigation.
+ */
+interface GuestResult {
+  blob: Blob;
+  fileName: string;
+  typeName: string;
+  to: string;
+  from: string;
+  number: string;
+  relatedDocumentNumber: string;
+  remaining: number;
+}
+
 /**
  * Create form for a document (`/documents/new?type=<id>`). The type was already
  * chosen on the picker and arrives as the `?type=` query param — it's shown
@@ -62,6 +84,7 @@ const CUSTOMER_SEARCH_DEBOUNCE_MS = 300;
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatMenuModule,
     MatProgressSpinnerModule,
     MatSelectModule,
     GuestPromoBanner,
@@ -93,8 +116,7 @@ export class DocumentCreate {
    */
   protected readonly isGuest = computed(() => !this.auth.isAuthenticated());
 
-  /** Free guest documents left in this browser, and the tunable limit for copy. */
-  protected readonly guestRemaining = this.guestAttempts.remaining;
+  /** The tunable free-document limit, for the exhausted-gate copy. */
   protected readonly guestLimit = GUEST_FREE_DOCUMENT_LIMIT;
 
   /**
@@ -107,12 +129,13 @@ export class DocumentCreate {
   );
 
   /**
-   * Set after a guest document has been generated and downloaded — holds the
-   * remaining count for the confirmation panel that replaces the form. Cleared
-   * when the guest starts another document. Null (and irrelevant) for signed-in
-   * users, who navigate to the saved document's detail page instead.
+   * Set after a guest document has been generated — holds the rendered PDF blob
+   * and a snapshot of the submitted fields for the detail-styled result view that
+   * replaces the form. Cleared when the guest starts another document. Null (and
+   * irrelevant) for signed-in users, who navigate to the saved document's detail
+   * page instead. See {@link GuestResult}.
    */
-  protected readonly guestResult = signal<{ remaining: number } | null>(null);
+  protected readonly guestResult = signal<GuestResult | null>(null);
 
   /** The document type chosen on the picker, from the `?type=` query param. */
   protected readonly type = toSignal(
@@ -515,17 +538,55 @@ export class DocumentCreate {
 
   /**
    * Guest path: `POST /documents/guest` returns the rendered PDF directly (nothing
-   * is saved, so there's no detail page to visit). We trigger an immediate browser
-   * download, then — only now that it has actually succeeded — burn one free
-   * attempt and switch to the confirmation panel. A thrown error (422/429/network)
-   * propagates to `submit`'s catch, leaving the attempt count untouched so a guest
-   * who fixes a validation error isn't charged for it.
+   * is saved, so there's no detail page to visit). Rather than download straight
+   * away, we keep the blob and a snapshot of the submitted fields in memory and
+   * switch to a detail-styled result view where the guest can download on demand —
+   * only now that creation has actually succeeded do we burn one free attempt. A
+   * thrown error (422/429/network) propagates to `submit`'s catch, leaving the
+   * attempt count untouched so a guest who fixes a validation error isn't charged.
    */
   private async generateGuestDocument(type: DocumentType): Promise<void> {
     const blob = await this.documents.createGuest(this.buildGuestRequest(type));
-    this.triggerDownload(blob, this.guestFileName(type));
     this.guestAttempts.recordSuccess();
-    this.guestResult.set({ remaining: this.guestAttempts.remaining() });
+    const raw = this.form.getRawValue();
+    this.guestResult.set({
+      blob,
+      fileName: this.guestFileName(type),
+      typeName: this.typeName() ?? humanize(type),
+      to: raw.to.trim(),
+      from: raw.from.trim(),
+      number: raw.number.trim(),
+      relatedDocumentNumber: raw.related_document_number.trim(),
+      remaining: this.guestAttempts.remaining(),
+    });
+  }
+
+  /**
+   * Result-view Download: saves the PDF that's already in memory from creation —
+   * no second network call. Guest documents are never persisted, so there's no id
+   * to re-fetch by anyway.
+   */
+  protected downloadGuestResult(): void {
+    const result = this.guestResult();
+    if (!result) {
+      return;
+    }
+    this.triggerDownload(result.blob, result.fileName);
+  }
+
+  /**
+   * Result-view Edit / Delete / Send email: none of these have a real action for a
+   * guest because nothing is persisted. Nudge them toward an account instead — no
+   * navigation, no API call.
+   */
+  protected lockedGuestAction(): void {
+    // `panelClass` opts this toast into the larger notification styling defined
+    // globally in styles.scss (snackbars render in an overlay outside component
+    // style encapsulation, so it can't be scoped here).
+    this.snackBar.open(GUEST_LOCKED_MESSAGE, 'Dismiss', {
+      duration: 6000,
+      panelClass: 'guest-locked-snackbar',
+    });
   }
 
   /**

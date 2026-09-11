@@ -220,7 +220,7 @@ describe('DocumentCreate (guest / try-before-you-sign-up)', () => {
     component.form.controls.from.setValue('My Business\n1 Main St');
     component.form.controls.items.at(0).patchValue({ name: 'Widget', quantity: 2, unit_cost: 5 });
 
-    return { component, documents, guestAttempts, router };
+    return { component, documents, guestAttempts, router, snackBar };
   }
 
   let createObjectURL: ReturnType<typeof vi.fn>;
@@ -241,7 +241,7 @@ describe('DocumentCreate (guest / try-before-you-sign-up)', () => {
     clickSpy.mockRestore();
   });
 
-  it('generates a guest document: posts to the guest endpoint, downloads, and decrements — no navigation', async () => {
+  it('generates a guest document: posts to the guest endpoint, shows the result view, and decrements — no download, no navigation', async () => {
     const { component, documents, guestAttempts, router } = setupGuest(3);
 
     await component.submit();
@@ -258,17 +258,65 @@ describe('DocumentCreate (guest / try-before-you-sign-up)', () => {
     expect('customer_id' in body).toBe(false);
     expect('include_logo' in body).toBe(false);
 
-    // ...triggers a browser download...
-    expect(createObjectURL).toHaveBeenCalledWith(pdfBlob);
-    expect(clickSpy).toHaveBeenCalledTimes(1);
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:fake');
-
-    // ...spends exactly one attempt and shows the confirmation with the new count...
+    // ...spends exactly one attempt and switches to the result view, keeping the
+    // rendered PDF blob and submitted fields in memory (nothing is persisted)...
     expect(guestAttempts.recordSuccess).toHaveBeenCalledTimes(1);
-    expect(component.guestResult()).toEqual({ remaining: 2 });
+    const result = component.guestResult();
+    expect(result.remaining).toBe(2);
+    expect(result.blob).toBe(pdfBlob);
+    expect(result.to).toBe('Acme Inc');
+    expect(result.from).toBe('My Business\n1 Main St');
+
+    // ...but does NOT download on creation (the button is now just "Create")...
+    expect(createObjectURL).not.toHaveBeenCalled();
+    expect(clickSpy).not.toHaveBeenCalled();
 
     // ...and never navigates to a detail page (nothing was saved).
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('result-view Download saves the in-memory PDF blob with no new network call', async () => {
+    const { component, documents } = setupGuest(3);
+
+    await component.submit();
+    // Creation didn't download; the result view's Download does.
+    expect(clickSpy).not.toHaveBeenCalled();
+
+    component.downloadGuestResult();
+
+    // Saves the blob already in memory...
+    expect(createObjectURL).toHaveBeenCalledWith(pdfBlob);
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:fake');
+    // ...and never re-hits the guest endpoint to re-render the PDF.
+    expect(documents.createGuest).toHaveBeenCalledTimes(1);
+  });
+
+  it('result-view Edit / Delete / Send email are locked: snackbar shown, no API call, no navigation, blob kept', async () => {
+    const { component, documents, guestAttempts, router, snackBar } = setupGuest(3);
+
+    await component.submit();
+    const result = component.guestResult();
+
+    // Each locked action just nudges toward an account, via the app's snackbar
+    // (the same surface used elsewhere) — never a native alert.
+    component.lockedGuestAction();
+    component.lockedGuestAction();
+    component.lockedGuestAction();
+
+    expect(snackBar.open).toHaveBeenCalledTimes(3);
+    expect(snackBar.open.mock.calls[0][0]).toBe(
+      'To unlock this feature, create an account or sign in.',
+    );
+
+    // No real action fired: no send/edit/delete network call, no navigation,
+    // and the result view (with its blob) stays put.
+    expect(documents.create).not.toHaveBeenCalled();
+    expect(documents.delete).not.toHaveBeenCalled();
+    expect(documents.createGuest).toHaveBeenCalledTimes(1);
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(guestAttempts.recordSuccess).toHaveBeenCalledTimes(1);
+    expect(component.guestResult()).toBe(result);
   });
 
   it('lets a guest create up to the free limit, then shows the gate instead of the form', async () => {

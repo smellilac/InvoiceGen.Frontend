@@ -1,31 +1,88 @@
 <main class="create-page">
   @if (guestResult(); as result) {
-    <!-- Guest confirmation: the PDF has already downloaded (nothing is saved, so
-         there's no detail page to visit). Shows how many free documents remain
-         plus a short promo. -->
-    <section class="guest-result" role="status" aria-live="polite">
-      <mat-icon class="guest-result-icon" aria-hidden="true">check_circle</mat-icon>
-      <h1>Your {{ typeName() }} has downloaded</h1>
-      <p>Guest documents aren't saved — check your downloads for the PDF.</p>
-      <p class="guest-result-remaining">
-        @if (result.remaining > 0) {
-          You have {{ result.remaining }} free
-          {{ result.remaining === 1 ? 'document' : 'documents' }} left.
-        } @else {
-          That was your last free document.
-        }
-      </p>
-
-      <app-guest-promo-banner variant="compact" />
-
-      @if (guestRemaining() > 0) {
-        <div class="guest-result-actions">
+    <!-- Guest result: nothing is saved (no id, no detail page), so we render a
+         detail-styled view straight from the in-memory PDF blob and submitted
+         fields. Download works for real off that blob; Edit/Delete/Send email are
+         locked behind an account and only show the sign-up nudge. -->
+    <section class="guest-result-view">
+      <div class="detail-header">
+        <div>
+          <h1>{{ result.typeName }}</h1>
+          @if (result.number) {
+            <p class="detail-number">{{ result.number }}</p>
+          }
+        </div>
+        <div class="detail-actions">
+          <button mat-stroked-button type="button" (click)="downloadGuestResult()">
+            <mat-icon>download</mat-icon>
+            Download PDF
+          </button>
+          <button mat-flat-button color="primary" type="button" (click)="lockedGuestAction()">
+            <mat-icon>send</mat-icon>
+            Send email
+          </button>
           <button
-            mat-flat-button
-            color="primary"
+            mat-stroked-button
             type="button"
-            (click)="startAnotherGuestDocument()"
+            class="more-actions-button"
+            aria-label="More actions"
+            [matMenuTriggerFor]="guestMoreActions"
           >
+            <mat-icon>more_horiz</mat-icon>
+          </button>
+          <mat-menu #guestMoreActions="matMenu">
+            <button mat-menu-item type="button" (click)="lockedGuestAction()">
+              <mat-icon>edit</mat-icon>
+              <span>Edit</span>
+            </button>
+            <button mat-menu-item type="button" (click)="lockedGuestAction()">
+              <mat-icon>delete_outline</mat-icon>
+              <span>Delete</span>
+            </button>
+          </mat-menu>
+        </div>
+      </div>
+
+      <div class="guest-result-note" role="status" aria-live="polite">
+        <mat-icon aria-hidden="true">check_circle</mat-icon>
+        <p>
+          Your {{ result.typeName }} is ready — guest documents aren't saved, so download the PDF to
+          keep it.
+          @if (result.remaining > 0) {
+            You have {{ result.remaining }} free
+            {{ result.remaining === 1 ? 'document' : 'documents' }} left.
+          } @else {
+            That was your last free document.
+          }
+        </p>
+      </div>
+
+      <mat-card appearance="outlined">
+        <mat-card-content class="detail-grid">
+          <div class="detail-field">
+            <span class="detail-label">Bill to</span>
+            <p class="detail-value multiline">{{ result.to }}</p>
+          </div>
+          @if (result.from) {
+            <div class="detail-field">
+              <span class="detail-label">From</span>
+              <p class="detail-value multiline">{{ result.from }}</p>
+            </div>
+          }
+          @if (result.relatedDocumentNumber) {
+            <div class="detail-field">
+              <span class="detail-label">Related document</span>
+              <p class="detail-value">{{ result.relatedDocumentNumber }}</p>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <app-guest-promo-banner />
+
+      @if (result.remaining > 0) {
+        <div class="guest-result-actions">
+          <button mat-button type="button" (click)="startAnotherGuestDocument()">
             Create another document
           </button>
         </div>
@@ -83,7 +140,7 @@
     </div>
 
     @if (isGuest()) {
-      <app-guest-promo-banner variant="compact" />
+      <app-guest-promo-banner />
     }
 
     <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
@@ -407,7 +464,7 @@
         @if (submitting()) {
           <mat-progress-spinner mode="indeterminate" diameter="20" />
         } @else {
-          {{ isGuest() ? 'Generate & download' : 'Create ' + typeName() }}
+          {{ isGuest() ? 'Create' : 'Create ' + typeName() }}
         }
       </button>
     </div>
