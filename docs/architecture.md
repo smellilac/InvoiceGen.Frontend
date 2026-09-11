@@ -30,9 +30,10 @@ feature folders — if two features need the same thing, it belongs in
 |---|---|---|
 | `/login` | public | `POST /auth/login` |
 | `/register` | public | `POST /auth/register` |
-| `/` | protected | Document type picker — `GET /document-types` |
+| `/help`, `/terms`, `/privacy` | public | Static informational pages (footer links) |
+| `/` | public | Document type picker — `GET /document-types` |
+| `/documents/new` | public | Create form. Signed in: `POST /documents`, saved, then detail page. Guest: `POST /documents/guest`, PDF downloaded, nothing saved. Accepts `?type=` and (signed in only) `?customerId=` / `?duplicateFrom=` |
 | `/documents` | protected | Paginated history — `GET /documents`, filterable by `type` / `customer_id` |
-| `/documents/new` | protected | Create form — `POST /documents`. Accepts `?type=` and optionally `?customerId=` (pre-links a saved customer, pre-filling `to`) |
 | `/documents/:id` | protected | Detail: summary, Download PDF, Send Email |
 | `/customers` | protected | Paginated list — `/customers*` |
 | `/customers/new` | protected | Create form — `POST /customers` |
@@ -40,11 +41,34 @@ feature folders — if two features need the same thing, it belongs in
 | `/customers/:id/edit` | protected | Edit form — `PATCH`/`DELETE /customers/{id}` |
 | `/profile` | protected | Business profile — `GET`/`PATCH /auth/me` |
 
-All protected routes sit behind `authGuard` (see `authentication.md`).
-`/document-types` is the one data endpoint that's public per the spec, but
-its route (`/`) still requires login in this app, since Phase 1's whole
-model is accounts-first — there's no anonymous document-creation flow (see
-`decisionslog.md` for why that's deliberate, not an oversight).
+The protected routes sit behind `authGuard` (see `authentication.md`),
+declared once on a componentless empty-path group nested inside the public
+`MainLayout` shell. The picker (`/`) and the creation form (`/documents/new`)
+are deliberately **public** — the "try before you sign up" guest flow (see
+below and `decisionslog.md`). `MainLayout` adapts its header to auth state:
+the full nav + Log out when signed in, Log in / Sign up when not.
+
+## Guest document flow
+
+A signed-out visitor can create documents before registering, capped by a
+soft client-side limit (`GuestAttemptsService`, `localStorage`, default
+`GUEST_FREE_DOCUMENT_LIMIT` = 3 — a nudge, not a security boundary).
+
+1. The picker and creation form render for guests. The form omits the
+   saved-customer picker and the logo toggle (both authenticated-only), shows
+   a sign-up nudge in the customer picker's place, and makes `from` required
+   (no saved profile to fall back on). A compact promo banner sits above it.
+2. On submit, a guest calls `POST /documents/guest` (`createGuestDocument`),
+   which returns the rendered PDF directly (`200 application/pdf`, nothing
+   persisted). The client triggers an immediate browser download — there's no
+   detail page to visit — then decrements the attempt count (only on success:
+   a `422` the user fixes doesn't burn an attempt) and shows a confirmation
+   with the remaining count.
+3. Once the free documents are used up, the form is replaced by a sign-up
+   gate (fuller benefit copy + a CTA to `/register`).
+
+Everything account-linked — history, detail, Customers, profile — stays
+behind `authGuard`, so a guest hitting one is redirected to `/login`.
 
 ## Auth flow (summary — full detail in `authentication.md`)
 

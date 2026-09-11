@@ -32,9 +32,11 @@ How login, token storage, and route protection work. See
 
 Applies to every outgoing request:
 
-1. If the request URL is one of the four public endpoints
-   (`/auth/register`, `/auth/login`, `/auth/refresh`, `/document-types`),
-   pass it through unchanged.
+1. If the request URL is one of the public endpoints (`/auth/register`,
+   `/auth/login`, `/auth/refresh`, `/document-types`, and `/documents/guest`
+   — the unauthenticated guest document flow), pass it through unchanged: no
+   bearer token attached, and no refresh-on-401 retry. A guest request can't
+   401 for auth reasons, so it must never drag the refresh machinery in.
 2. Otherwise, attach `Authorization: Bearer <access_token>` from
    `AuthService`.
 3. If the response is `401`, call `AuthService.refresh()` once. On

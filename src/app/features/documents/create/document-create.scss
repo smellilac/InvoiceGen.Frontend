@@ -135,6 +135,208 @@
   }
 }
 
+/* Sign-up promo between the header and the guest form — a clear gap below keeps
+   it visually separate from the form fields it sits above. It spans the normal
+   content width (same as the cards below); the banner's own container query is
+   tuned to render its horizontal row at that width. */
+.create-header + app-guest-promo-banner {
+  display: block;
+  margin-bottom: 2rem;
+}
+
+/* Sign-up nudge shown to guests where the saved-customer picker would be. */
+.guest-customer-nudge {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0.25rem 0 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f4f6ff;
+  border: 1px dashed #c4ccf5;
+  border-radius: 10px;
+
+  mat-icon {
+    color: #5b6bd6;
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+/* The exhausted gate keeps its centered, roomy card treatment. */
+.guest-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 2.5rem 1.5rem;
+
+  h1 {
+    margin: 0;
+  }
+
+  p {
+    margin: 0;
+    max-width: 34rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  app-guest-promo-banner {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
+
+/* Guest result view: mirrors the authenticated document detail page's layout so
+   a guest sees the same result treatment (header with actions, details card).
+   The detail-* classes below are copied from document-detail.scss because
+   component styles are scoped and can't be shared across components. */
+.guest-result-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  app-guest-promo-banner {
+    display: block;
+  }
+}
+
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0;
+  }
+}
+
+.detail-number {
+  margin: 0.25rem 0 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.detail-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+// Icon-only text button: reset the leading-icon margins Material adds for an
+// icon + label pair so the lone icon sits centered (same as the detail page).
+.more-actions-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  .mat-icon {
+    margin: 0;
+  }
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+}
+
+.detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-label {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.detail-value {
+  margin: 0;
+}
+
+.detail-value.multiline {
+  white-space: pre-line;
+}
+
+/* "Your X is ready" note above the details card — a success accent strip in the
+   same spirit as the detail page's created-banner. */
+.guest-result-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #e8f5e9;
+  border-left: 4px solid #2e7d32;
+  border-radius: 0.5rem;
+
+  mat-icon {
+    flex: none;
+    color: #2e7d32;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.guest-result-actions,
+.guest-gate-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.guest-gate-icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  color: #5b6bd6;
+}
+
+.guest-gate-lead {
+  font-weight: 500;
+}
+
+.guest-gate-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  width: 100%;
+  max-width: 30rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  mat-icon {
+    flex: 0 0 auto;
+    color: #5b6bd6;
+  }
+
+  strong {
+    display: block;
+  }
+
+  span {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
 /* Two-line customer autocomplete option: name over a muted email. */
 .customer-option-name {
   display: block;

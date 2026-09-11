@@ -6,13 +6,17 @@ How this app talks to the backend, and how it stays in sync with
 ## Generating types from the spec
 
 Request/response types are **generated, not hand-written**, from the
-backend's `openapi.yaml` (currently v0.12.0). Use `ng-openapi-gen` (or
-`openapi-typescript` if you'd rather generate plain types and write your
-own thin HTTP wrappers):
+backend's `openapi.yaml` (currently v0.13.0, which added the guest document
+flow — `POST /documents/guest`, `GuestCreateDocumentRequest`). Use
+`ng-openapi-gen` (or `openapi-typescript` if you'd rather generate plain
+types and write your own thin HTTP wrappers):
 
 ```
-npx ng-openapi-gen --input ../invoiceapp/docs/openapi.yaml --output src/app/core/api-client
+npx ng-openapi-gen --input ../invoiceapp/docs/openapi.yaml --output src/app/api
 ```
+
+(The repo keeps a copy of the spec at `openapi.yaml` in the project root;
+pull the backend's latest over it, then regenerate.)
 
 Re-run this any time the backend's `openapi.yaml` version bumps — don't
 patch the generated files by hand, since the next regeneration would

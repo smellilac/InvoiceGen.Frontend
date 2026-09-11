@@ -147,9 +147,16 @@ export class AuthService {
    * because the in-memory user is only set on login/register — a silent
    * `/auth/refresh` returns just a token pair — so after a reload it can be stale
    * or absent. Must be created from an injection context (a component field).
+   *
+   * Pass an `enabled` predicate to keep the resource idle (no request) while it
+   * returns false — the guest document form uses this so an unauthenticated
+   * visitor never fires `GET /auth/me` (which would 401). Omit it and the
+   * resource always loads, as the profile page relies on.
    */
-  currentUserResource() {
-    return httpResource<User>(() => `${this.config.rootUrl}${getCurrentUser.PATH}`);
+  currentUserResource(enabled?: () => boolean) {
+    return httpResource<User>(() =>
+      enabled && !enabled() ? undefined : `${this.config.rootUrl}${getCurrentUser.PATH}`,
+    );
   }
 
   /**

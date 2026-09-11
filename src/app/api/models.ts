@@ -11,6 +11,7 @@ export type { DocumentList } from './models/document-list';
 export type { DocumentType } from './models/document-type';
 export type { DocumentTypeInfo } from './models/document-type-info';
 export type { ErrorResponse } from './models/error-response';
+export type { GuestCreateDocumentRequest } from './models/guest-create-document-request';
 export type { LineItem } from './models/line-item';
 export type { LoginRequest } from './models/login-request';
 export type { MonetaryAmount } from './models/monetary-amount';

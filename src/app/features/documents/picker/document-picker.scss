@@ -18,6 +18,14 @@
   }
 }
 
+// Sign-up promotion sits between the intro and the type grid. A generous gap
+// below it keeps clear separation from the primary content (the type cards),
+// so the promotion reads as a distinct band rather than crowding the grid.
+app-guest-promo-banner {
+  display: block;
+  margin-bottom: 2.5rem;
+}
+
 .picker-status {
   display: flex;
   flex-direction: column;

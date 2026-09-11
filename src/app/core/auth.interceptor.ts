@@ -10,7 +10,17 @@ import { AuthService } from './auth.service';
  * refresh-on-401 dance (the refresh call itself lives here, so treating it as
  * public is also what prevents an infinite refresh loop).
  */
-const PUBLIC_PATHS = ['/auth/register', '/auth/login', '/auth/refresh', '/document-types'];
+const PUBLIC_PATHS = [
+  '/auth/register',
+  '/auth/login',
+  '/auth/refresh',
+  '/document-types',
+  // The guest document endpoint is unauthenticated (`security: []`): a guest
+  // request must carry no bearer token and must never trigger a refresh-retry —
+  // it can't 401 for auth reasons, so treating it as public keeps it out of that
+  // path entirely. See docs/architecture.md's guest flow.
+  '/documents/guest',
+];
 
 function isPublicRequest(url: string): boolean {
   let path: string;

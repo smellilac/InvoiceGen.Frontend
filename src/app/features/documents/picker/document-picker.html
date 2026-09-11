@@ -4,6 +4,10 @@
     <p>Choose a document type to get started.</p>
   </div>
 
+  @if (isGuest()) {
+    <app-guest-promo-banner />
+  }
+
   @if (types.isLoading()) {
     <div class="picker-status" role="status" aria-live="polite">
       <mat-spinner diameter="48" />

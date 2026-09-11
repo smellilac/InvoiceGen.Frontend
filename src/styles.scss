@@ -72,6 +72,24 @@ app-root {
   flex: 1 0 auto;
 }
 
+// Larger styling for the guest "locked feature" toast (opened with
+// `panelClass: 'guest-locked-snackbar'`). Snackbars render in the CDK overlay,
+// outside any component's view encapsulation, so this has to live globally.
+// Position and dismiss behaviour are unchanged — this only enlarges padding and
+// text so it reads as a clear notification rather than a thin strip.
+.guest-locked-snackbar {
+  .mdc-snackbar__surface {
+    padding: 0.5rem 0.75rem;
+    min-height: 4rem;
+  }
+
+  .mat-mdc-snack-bar-label {
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+}
+
 // Material Symbols (outlined) helper class. The Google Fonts `css2` endpoint we
 // load in index.html only defines the @font-face, not the ligature helper class
 // that the legacy `icon?family=` endpoint ships, so define it here. `<mat-icon
