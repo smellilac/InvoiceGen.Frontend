@@ -37,6 +37,8 @@ export type { ListDocuments$Params as ListDocuments$Params } from './fn/document
 export { listDocuments as listDocuments } from './fn/documents/list-documents';
 export type { CreateDocument$Params as CreateDocument$Params } from './fn/documents/create-document';
 export { createDocument as createDocument } from './fn/documents/create-document';
+export type { CreateGuestDocument$Params as CreateGuestDocument$Params } from './fn/documents/create-guest-document';
+export { createGuestDocument as createGuestDocument } from './fn/documents/create-guest-document';
 export type { GetDocument$Params as GetDocument$Params } from './fn/documents/get-document';
 export { getDocument as getDocument } from './fn/documents/get-document';
 export type { DeleteDocument$Params as DeleteDocument$Params } from './fn/documents/delete-document';

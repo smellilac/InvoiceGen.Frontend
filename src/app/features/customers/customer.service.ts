@@ -51,11 +51,19 @@ export class CustomerService {
    * substring match against name), `page`, `per_page`. `per_page` is only sent
    * when a caller sets one (clamped to {@link MAX_PER_PAGE}); omit it to let the
    * backend default govern page size, so the two stay in sync automatically.
+   *
+   * The accessor may return `null` to keep the resource idle (no request) —
+   * `/customers` requires auth, so the guest document form uses this to avoid
+   * firing a call that would 401 (see `DocumentCreate`), the same idle pattern
+   * {@link getResource} uses for an undefined id.
    */
-  list(params: () => ListCustomers$Params) {
+  list(params: () => ListCustomers$Params | null) {
     return httpResource<CustomerList>(
       () => {
         const p = params();
+        if (!p) {
+          return undefined;
+        }
         // Only defined params go on the wire, to keep the URL clean and cache-friendly.
         const query: Record<string, string | number> = {
           page: p.page ?? 1,

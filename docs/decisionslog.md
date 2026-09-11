@@ -69,7 +69,10 @@ through several versions (currently 0.8.0) with real field renames
 change surfaces as a compile error in the frontend instead of a silent
 runtime mismatch. See `api-client.md` for the generation command.
 
-## Accounts required for every document (no anonymous flow)
+## Accounts required for every document (no anonymous flow) — SUPERSEDED
+
+**Superseded:** a guest "try before you sign up" flow now exists (see the
+next entry). This original reasoning is kept for context.
 
 Considered whether requiring login before generating even one document
 creates too much friction, compared to invoice-generator.com's model
@@ -82,6 +85,31 @@ no verification step), which reduces how much friction this decision
 actually adds. An anonymous "try without an account" flow is a real
 possible future feature, but a deliberate one to add later with evidence
 it's needed, not a default to build in now.
+
+## Guest document flow (try before you sign up)
+
+The anonymous flow flagged as "a possible future feature" above is now
+built, on the back of the backend's `POST /documents/guest`
+(`security: []`, added in `openapi.yaml` 0.13.0). A signed-out visitor can
+reach the document type picker and the creation form and generate real
+PDFs without an account; the response is the rendered PDF streamed straight
+back (nothing is persisted — no history, no `id`), so the client triggers
+an immediate download rather than navigating to a detail page.
+
+Everything account-linked stays behind the auth guard exactly as before —
+history, document detail, all of Customers, the profile. The guest form
+therefore omits the saved-customer picker and the logo toggle (both are
+authenticated-only resources) and makes `from` required, since there's no
+saved business profile to fall back on.
+
+The number of free guest documents is a **soft, client-side limit**
+(`GuestAttemptsService`, `localStorage`, default `GUEST_FREE_DOCUMENT_LIMIT`
+= 3), deliberately *not* a security boundary: it's a gentle nudge toward
+signing up, and a cleared `localStorage` simply resets it. The real
+resource protection is the auth guard on everything that matters; the guest
+endpoint itself intentionally persists nothing, so there's nothing to
+abuse. Enforcing a hard per-visitor cap would need backend state we
+deliberately don't keep for guests.
 
 ## Package manager: npm
 

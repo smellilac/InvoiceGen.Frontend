@@ -31,15 +31,29 @@ import { Logo } from './logo';
 
       <span class="nav-spacer"></span>
 
-      <nav class="nav-links" aria-label="Primary">
-        <a mat-button routerLink="/documents" routerLinkActive="nav-link-active">Documents</a>
-        <a mat-button routerLink="/customers" routerLinkActive="nav-link-active">Customers</a>
-        <a mat-button routerLink="/profile" routerLinkActive="nav-link-active">Profile</a>
-      </nav>
+      @if (isAuthenticated()) {
+        <nav class="nav-links" aria-label="Primary">
+          <a mat-button routerLink="/documents" routerLinkActive="nav-link-active">Documents</a>
+          <a mat-button routerLink="/customers" routerLinkActive="nav-link-active">Customers</a>
+          <a mat-button routerLink="/profile" routerLinkActive="nav-link-active">Profile</a>
+        </nav>
 
-      <button mat-stroked-button class="logout-button" type="button" (click)="logout()">
-        Log out
-      </button>
+        <button mat-stroked-button class="logout-button" type="button" (click)="logout()">
+          Log out
+        </button>
+      } @else {
+        <!-- Signed-out shell (the public picker / guest document form): the
+             primary nav points at account-only areas, so instead offer the two
+             ways in. -->
+        <nav class="nav-links" aria-label="Account">
+          <a mat-button routerLink="/help" routerLinkActive="nav-link-active">Help</a>
+          <a mat-button routerLink="/login" routerLinkActive="nav-link-active">Log in</a>
+        </nav>
+
+        <a mat-flat-button color="primary" class="signup-button" routerLink="/register">
+          Sign up
+        </a>
+      }
     </mat-toolbar>
 
     <router-outlet />
@@ -111,6 +125,16 @@ import { Logo } from './logo';
       padding: 0 1.25rem;
     }
 
+    /* Primary CTA for signed-out visitors — sized to match the Log out pill it
+       replaces so the header keeps the same rhythm across auth states. */
+    .signup-button {
+      --mdc-filled-button-container-height: 40px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1.0625rem;
+      padding: 0 1.25rem;
+    }
+
     @media (max-width: 600px) {
       /* Wrap instead of clipping: logo on top, nav + Log out on a second row. */
       .app-nav {
@@ -145,6 +169,9 @@ import { Logo } from './logo';
 export class MainLayout {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+
+  /** Drives the nav: full app links + Log out when signed in, Log in / Sign up when not. */
+  protected readonly isAuthenticated = this.auth.isAuthenticated;
 
   protected async logout(): Promise<void> {
     await this.auth.logout();

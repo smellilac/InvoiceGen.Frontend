@@ -21,12 +21,15 @@ import { CreateDocumentRequest } from '../../../api/models/create-document-reque
 import { Customer } from '../../../api/models/customer';
 import { Document } from '../../../api/models/document';
 import { DocumentType } from '../../../api/models/document-type';
+import { GuestCreateDocumentRequest } from '../../../api/models/guest-create-document-request';
 import { LineItem } from '../../../api/models/line-item';
 import { ValidationErrorResponse } from '../../../api/models/validation-error-response';
 import { AuthService } from '../../../core/auth.service';
 import { CustomerService } from '../../customers/customer.service';
 import { DocumentService } from '../document.service';
 import { DocumentTypeService } from '../document-type.service';
+import { GUEST_FREE_DOCUMENT_LIMIT, GuestAttemptsService } from '../guest-attempts.service';
+import { GuestPromoBanner } from '../guest-promo-banner';
 
 /** A short list of common ISO 4217 codes for the currency picker. */
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'INR', 'NZD'] as const;
@@ -61,6 +64,7 @@ const CUSTOMER_SEARCH_DEBOUNCE_MS = 300;
     MatInputModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    GuestPromoBanner,
   ],
   templateUrl: './document-create.html',
   styleUrl: './document-create.scss',
@@ -73,11 +77,42 @@ export class DocumentCreate {
   private readonly customers = inject(CustomerService);
   private readonly documents = inject(DocumentService);
   private readonly documentTypes = inject(DocumentTypeService);
+  private readonly guestAttempts = inject(GuestAttemptsService);
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly currencies = CURRENCIES;
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+
+  /**
+   * True for a signed-out visitor. Reliable at construction because the app's
+   * silent session restore runs as an APP_INITIALIZER, so auth state is already
+   * settled before this component renders (see docs/authentication.md). Drives
+   * the whole guest branch: no customer picker, `from` required, submit posts to
+   * `/documents/guest` and downloads instead of navigating.
+   */
+  protected readonly isGuest = computed(() => !this.auth.isAuthenticated());
+
+  /** Free guest documents left in this browser, and the tunable limit for copy. */
+  protected readonly guestRemaining = this.guestAttempts.remaining;
+  protected readonly guestLimit = GUEST_FREE_DOCUMENT_LIMIT;
+
+  /**
+   * A guest who has used all their free documents: the form is replaced by the
+   * sign-up gate rather than letting them fill it out only to be blocked on
+   * submit. Never true for a signed-in user.
+   */
+  protected readonly guestExhausted = computed(
+    () => this.isGuest() && !this.guestAttempts.hasRemaining(),
+  );
+
+  /**
+   * Set after a guest document has been generated and downloaded — holds the
+   * remaining count for the confirmation panel that replaces the form. Cleared
+   * when the guest starts another document. Null (and irrelevant) for signed-in
+   * users, who navigate to the saved document's detail page instead.
+   */
+  protected readonly guestResult = signal<{ remaining: number } | null>(null);
 
   /** The document type chosen on the picker, from the `?type=` query param. */
   protected readonly type = toSignal(
@@ -118,10 +153,12 @@ export class DocumentCreate {
    * search pattern as the customers list. Reads `customerSearch` reactively so it
    * refetches as the user types.
    */
-  protected readonly customerResults = this.customers.list(() => ({
-    search: this.customerSearch() || undefined,
-    page: 1,
-  }));
+  protected readonly customerResults = this.customers.list(() =>
+    // Customers is an authenticated-only resource — a guest has none to pick, and
+    // the request would 401. Return null to keep the resource idle for guests
+    // (the picker UI is hidden for them anyway).
+    this.isGuest() ? null : { search: this.customerSearch() || undefined, page: 1 },
+  );
   /** The currently linked saved customer, if any — drives the "None" option and hint. */
   protected readonly selectedCustomer = signal<Customer | null>(null);
 
@@ -146,7 +183,9 @@ export class DocumentCreate {
    * populated on a fresh page load (see the resource's doc comment) — this way
    * a hard-refresh onto `/documents/new` still knows about the profile logo.
    */
-  private readonly profile = this.auth.currentUserResource();
+  // Guarded so a guest never fires `GET /auth/me` (there's no profile, and it
+  // would 401) — the logo toggle it feeds is hidden for guests anyway.
+  private readonly profile = this.auth.currentUserResource(() => !this.isGuest());
   /** True once the profile has a logo the backend can stamp onto the PDF. */
   protected readonly hasProfileLogo = computed(() => !!this.profile.value()?.logo_url);
   /** Suppresses the "set a logo" hint until we actually know the profile has none. */
@@ -198,6 +237,14 @@ export class DocumentCreate {
   });
 
   constructor() {
+    if (this.isGuest()) {
+      // A guest has no saved business profile to fall back on, so `from` must be
+      // filled in on every guest document — the backend requires it too (see
+      // GuestCreateDocumentRequest). Signed-in users keep it optional.
+      this.form.controls.from.addValidators(Validators.required);
+      this.form.controls.from.updateValueAndValidity({ emitEvent: false });
+    }
+
     const user = this.auth.currentUser();
     if (user) {
       const from = [user.business_name, user.business_address].filter(Boolean).join('\n');
@@ -423,29 +470,11 @@ export class DocumentCreate {
     this.errorMessage.set(null);
 
     try {
-      const doc = await this.documents.create(this.buildRequest(type));
-
-      // In edit mode the new document is the corrected copy, so soft-delete the
-      // source it was edited from — the net effect is an in-place edit. The save
-      // has already succeeded here, so a failed delete must not block navigation
-      // or imply the save failed; it only leaves the original behind, which we
-      // flag as a non-blocking warning so the user can remove it manually.
-      const sourceId = this.duplicateFromId();
-      if (sourceId) {
-        try {
-          await this.documents.delete(sourceId);
-        } catch {
-          this.snackBar.open(
-            'Saved, but couldn’t remove the original document — you may want to delete it manually.',
-            'Dismiss',
-            { duration: 8000 },
-          );
-        }
+      if (this.isGuest()) {
+        await this.generateGuestDocument(type);
+      } else {
+        await this.createSavedDocument(type);
       }
-
-      // `justCreated` drives the one-time "generated!" banner on the detail page;
-      // it rides in router navigation state so it doesn't appear on normal revisits.
-      await this.router.navigate(['/documents', doc.id], { state: { justCreated: true } });
     } catch (error) {
       this.handleError(error);
     } finally {
@@ -453,11 +482,83 @@ export class DocumentCreate {
     }
   }
 
-  /** Assembles the raw form values into a `CreateDocumentRequest`. */
-  private buildRequest(type: DocumentType): CreateDocumentRequest {
-    const raw = this.form.getRawValue();
+  /**
+   * Signed-in path: `POST /documents`, then (in edit mode) soft-delete the source
+   * and navigate to the new document's detail page. Unchanged from the original
+   * flow — only lifted out of `submit` so the guest branch can sit beside it.
+   */
+  private async createSavedDocument(type: DocumentType): Promise<void> {
+    const doc = await this.documents.create(this.buildRequest(type));
 
-    const items: LineItem[] = raw.items.map((item) => {
+    // In edit mode the new document is the corrected copy, so soft-delete the
+    // source it was edited from — the net effect is an in-place edit. The save
+    // has already succeeded here, so a failed delete must not block navigation
+    // or imply the save failed; it only leaves the original behind, which we
+    // flag as a non-blocking warning so the user can remove it manually.
+    const sourceId = this.duplicateFromId();
+    if (sourceId) {
+      try {
+        await this.documents.delete(sourceId);
+      } catch {
+        this.snackBar.open(
+          'Saved, but couldn’t remove the original document — you may want to delete it manually.',
+          'Dismiss',
+          { duration: 8000 },
+        );
+      }
+    }
+
+    // `justCreated` drives the one-time "generated!" banner on the detail page;
+    // it rides in router navigation state so it doesn't appear on normal revisits.
+    await this.router.navigate(['/documents', doc.id], { state: { justCreated: true } });
+  }
+
+  /**
+   * Guest path: `POST /documents/guest` returns the rendered PDF directly (nothing
+   * is saved, so there's no detail page to visit). We trigger an immediate browser
+   * download, then — only now that it has actually succeeded — burn one free
+   * attempt and switch to the confirmation panel. A thrown error (422/429/network)
+   * propagates to `submit`'s catch, leaving the attempt count untouched so a guest
+   * who fixes a validation error isn't charged for it.
+   */
+  private async generateGuestDocument(type: DocumentType): Promise<void> {
+    const blob = await this.documents.createGuest(this.buildGuestRequest(type));
+    this.triggerDownload(blob, this.guestFileName(type));
+    this.guestAttempts.recordSuccess();
+    this.guestResult.set({ remaining: this.guestAttempts.remaining() });
+  }
+
+  /**
+   * Clear the confirmation and go back to the picker to start a fresh guest
+   * document. Each guest document deliberately begins from a blank form (we don't
+   * persist `from` or anything else across guest documents — see the guest flow
+   * in docs/architecture.md), and the picker is where a type is chosen.
+   */
+  protected startAnotherGuestDocument(): void {
+    this.guestResult.set(null);
+    void this.router.navigate(['/']);
+  }
+
+  /** Saves a PDF blob to the user's downloads via a transient object URL. */
+  private triggerDownload(blob: Blob, fileName: string): void {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /** A readable download name, e.g. `invoice-2026-09-10.pdf`. */
+  private guestFileName(type: DocumentType): string {
+    const date = this.form.controls.date.value;
+    const stamp = date ? toIsoDate(date) : toIsoDate(new Date());
+    return `${type}-${stamp}.pdf`;
+  }
+
+  /** Maps the line-item FormArray to trimmed `LineItem`s, dropping empty optionals. */
+  private buildLineItems(): LineItem[] {
+    return this.form.getRawValue().items.map((item) => {
       const line: LineItem = {
         name: item.name.trim(),
         quantity: item.quantity ?? 0,
@@ -473,6 +574,11 @@ export class DocumentCreate {
       }
       return line;
     });
+  }
+
+  /** Assembles the raw form values into a `CreateDocumentRequest`. */
+  private buildRequest(type: DocumentType): CreateDocumentRequest {
+    const raw = this.form.getRawValue();
 
     const body: CreateDocumentRequest = {
       type,
@@ -480,7 +586,7 @@ export class DocumentCreate {
       currency: raw.currency,
       // `date` passes the form's required validation, so it's non-null here.
       date: toIsoDate(raw.date!),
-      items,
+      items: this.buildLineItems(),
       tax_percent: raw.tax_percent ?? 0,
       discount_percent: raw.discount_percent ?? 0,
       shipping_amount: raw.shipping_amount ?? 0,
@@ -496,6 +602,51 @@ export class DocumentCreate {
     if (from) {
       body.from = from;
     }
+    if (raw.due_date) {
+      body.due_date = toIsoDate(raw.due_date);
+    }
+    const number = raw.number.trim();
+    if (number) {
+      body.number = number;
+    }
+    const related = raw.related_document_number.trim();
+    if (related) {
+      body.related_document_number = related;
+    }
+    const notes = raw.notes.trim();
+    if (notes) {
+      body.notes = notes;
+    }
+    const terms = raw.terms.trim();
+    if (terms) {
+      body.terms = terms;
+    }
+
+    return body;
+  }
+
+  /**
+   * Assembles the raw form values into a `GuestCreateDocumentRequest`. Same shape
+   * as {@link buildRequest} minus the two things a guest can't have: `customer_id`
+   * (no saved customers) and `include_logo` (no profile logo). `from` is required
+   * for a guest and validated as such on the form, so it's always present here.
+   */
+  private buildGuestRequest(type: DocumentType): GuestCreateDocumentRequest {
+    const raw = this.form.getRawValue();
+
+    const body: GuestCreateDocumentRequest = {
+      type,
+      to: raw.to.trim(),
+      from: raw.from.trim(),
+      currency: raw.currency,
+      // `date` passes the form's required validation, so it's non-null here.
+      date: toIsoDate(raw.date!),
+      items: this.buildLineItems(),
+      tax_percent: raw.tax_percent ?? 0,
+      discount_percent: raw.discount_percent ?? 0,
+      shipping_amount: raw.shipping_amount ?? 0,
+    };
+
     if (raw.due_date) {
       body.due_date = toIsoDate(raw.due_date);
     }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -8,8 +8,10 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs/operators';
 
 import { DocumentType } from '../../../api/models/document-type';
+import { AuthService } from '../../../core/auth.service';
 import { documentTypeDescription, documentTypeIcon } from '../document-type-display';
 import { DocumentTypeService } from '../document-type.service';
+import { GuestPromoBanner } from '../guest-promo-banner';
 
 /**
  * First screen after login (route `/`). Lists the document types the backend
@@ -30,6 +32,7 @@ import { DocumentTypeService } from '../document-type.service';
     MatCardModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    GuestPromoBanner,
   ],
   templateUrl: './document-picker.html',
   styleUrl: './document-picker.scss',
@@ -37,8 +40,12 @@ import { DocumentTypeService } from '../document-type.service';
 export class DocumentPicker {
   private readonly documentTypes = inject(DocumentTypeService);
   private readonly route = inject(ActivatedRoute);
+  private readonly auth = inject(AuthService);
 
   protected readonly types = this.documentTypes.list();
+
+  /** True for a signed-out visitor — drives the guest promo banner (and nothing else here). */
+  protected readonly isGuest = computed(() => !this.auth.isAuthenticated());
 
   /** Optional customer carried in from a customer's detail page (`?customerId=`). */
   private readonly customerId = toSignal(

@@ -4,6 +4,7 @@ import { httpResource } from '@angular/common/http';
 import { Api } from '../../api/api';
 import { ApiConfiguration } from '../../api/api-configuration';
 import { createDocument } from '../../api/fn/documents/create-document';
+import { createGuestDocument } from '../../api/fn/documents/create-guest-document';
 import { deleteDocument } from '../../api/fn/documents/delete-document';
 import { downloadDocumentPdf } from '../../api/fn/documents/download-document-pdf';
 import { getDocument } from '../../api/fn/documents/get-document';
@@ -12,6 +13,7 @@ import { recordSettlement } from '../../api/fn/documents/record-settlement';
 import { sendDocument } from '../../api/fn/documents/send-document';
 import { CreateDocumentRequest } from '../../api/models/create-document-request';
 import { Document } from '../../api/models/document';
+import { GuestCreateDocumentRequest } from '../../api/models/guest-create-document-request';
 import { DocumentList } from '../../api/models/document-list';
 import { RecordSettlementRequest } from '../../api/models/record-settlement-request';
 import { SendDocumentRequest } from '../../api/models/send-document-request';
@@ -90,6 +92,20 @@ export class DocumentService {
    */
   create(body: CreateDocumentRequest): Promise<Document> {
     return this.api.invoke(createDocument, { body });
+  }
+
+  /**
+   * `POST /documents/guest` — the unauthenticated "try before you sign up" path.
+   * Unlike {@link create}, the backend persists NOTHING (no `Document`, no
+   * history, no `id`) and streams the rendered PDF straight back, so this
+   * resolves with a `Blob` the caller downloads directly rather than a `Document`
+   * to navigate to. Totals are still computed server-side by the same code path
+   * as {@link create} (see the backend's `x-guest-document-policy`). The request
+   * carries no bearer token and never triggers the 401-refresh dance — the auth
+   * interceptor treats `/documents/guest` as public.
+   */
+  createGuest(body: GuestCreateDocumentRequest): Promise<Blob> {
+    return this.api.invoke(createGuestDocument, { body });
   }
 
   /**

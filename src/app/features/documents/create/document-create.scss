@@ -135,6 +135,124 @@
   }
 }
 
+/* Compact promo banner between the header and the guest form. */
+.create-header + app-guest-promo-banner {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+/* Sign-up nudge shown to guests where the saved-customer picker would be. */
+.guest-customer-nudge {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0.25rem 0 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f4f6ff;
+  border: 1px dashed #c4ccf5;
+  border-radius: 10px;
+
+  mat-icon {
+    color: #5b6bd6;
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+/* Guest confirmation panel (after a successful download) and the exhausted gate
+   share a centered, roomy card treatment. */
+.guest-result,
+.guest-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 2.5rem 1.5rem;
+
+  h1 {
+    margin: 0;
+  }
+
+  p {
+    margin: 0;
+    max-width: 34rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  app-guest-promo-banner {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
+
+.guest-result-icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  color: #2e7d32;
+}
+
+.guest-result-remaining {
+  font-weight: 600;
+  color: var(--mat-sys-on-surface) !important;
+}
+
+.guest-result-actions,
+.guest-gate-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.guest-gate-icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  color: #5b6bd6;
+}
+
+.guest-gate-lead {
+  font-weight: 500;
+}
+
+.guest-gate-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  width: 100%;
+  max-width: 30rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  mat-icon {
+    flex: 0 0 auto;
+    color: #5b6bd6;
+  }
+
+  strong {
+    display: block;
+  }
+
+  span {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
 /* Two-line customer autocomplete option: name over a muted email. */
 .customer-option-name {
   display: block;
