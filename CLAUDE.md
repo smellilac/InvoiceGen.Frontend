@@ -14,7 +14,9 @@ list — keep it honest):
 
 - **Auth** — register, login, logout, JWT access/refresh with an HTTP
   interceptor and a route guard on the protected subtree
-  (`core/auth.*`, `features/auth/`).
+  (`core/auth.*`, `features/auth/`). Both `/login` and `/register` also offer
+  **"Continue with Google"** (`POST /auth/google`) alongside the
+  email/password form — see `docs/google-sign-in.md`.
 - **Profile / business settings** (`/profile`) — edit the fields that
   pre-fill new documents (business name/address, default currency) and
   upload/remove a logo, via `GET`/`PATCH /auth/me` and the logo endpoints.
@@ -73,6 +75,7 @@ never a hand-typed `fetch`/`HttpClient` call with guessed response shapes.
 | `docs/architecture.md` | Routing map, folder layout, and how a request flows end to end (auth, document creation, sending) |
 | `docs/api-client.md` | How API types are generated from `openapi.yaml`, and how each feature service uses them |
 | `docs/authentication.md` | Token storage, the auth interceptor, the route guard, login/logout/refresh flow |
+| `docs/google-sign-in.md` | "Continue with Google" — GSI script, the shared button, `/auth/google`, and the Google-only-account login case |
 | `docs/conventions.md` | Coding conventions specific to this repo |
 | `docs/decisionslog.md` | Why things are the way they are — stack choices, token storage, forms library. Read this before "fixing" something that looks odd |
 | `docs/development.md` | How to run the app and the backend together locally |

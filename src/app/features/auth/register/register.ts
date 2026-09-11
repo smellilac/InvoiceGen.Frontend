@@ -10,6 +10,7 @@ import { Router, RouterLink } from '@angular/router';
 
 import { ValidationErrorResponse } from '../../../api/models/validation-error-response';
 import { AuthService } from '../../../core/auth.service';
+import { GoogleSignInButton } from '../../../shared/google-sign-in-button';
 import { Logo } from '../../../shared/logo';
 
 @Component({
@@ -24,6 +25,7 @@ import { Logo } from '../../../shared/logo';
     MatButtonModule,
     MatProgressSpinnerModule,
     Logo,
+    GoogleSignInButton,
   ],
   templateUrl: './register.html',
   styleUrl: './register.scss',
@@ -63,6 +65,15 @@ export class Register {
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  /**
+   * The Google button component has already stored the tokens by the time this
+   * fires — Google sign-up and sign-in are the same call — so we just land the
+   * user on the app home like a completed registration does.
+   */
+  protected onGoogleSignIn(): void {
+    void this.router.navigateByUrl('/');
   }
 
   private handleError(error: unknown): void {
