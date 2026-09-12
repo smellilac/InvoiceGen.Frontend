@@ -1,0 +1,166 @@
+// Shared styling for the /login and /register cards. Both pages render the
+// same centred-card layout (logo, "Sign in"/"Create account" heading, the
+// email/password form, an "or" divider, then the "Continue with Google"
+// button), so their look is kept in one place here and `@use`d from each
+// component stylesheet. Any per-page tweaks stay in the component's own file.
+//
+// The card is scaled up ~1.15x from Material's base sizing — width, padding,
+// field heights and text, the heading, the submit button and the account
+// link all grow together — while the Google button is scaled a little more
+// (1.25x) so it reads as the prominent alternative. See the Google button
+// block at the bottom.
+@use '@angular/material' as mat;
+
+:host {
+  /* The root shell (styles.scss) grows this routed host to fill the space above
+     the shared footer via `flex: 1 0 auto`. Make the host a flex column so the
+     page below can grow into that height with `flex: 1` — rather than a
+     percentage height, which would resolve against the host's flex-derived
+     (non-explicit) height and collapse, leaving the card stuck at the top. */
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-page {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Grow to fill the host (the space above the footer) so the card centres
+     within it, without pushing the footer below the fold. */
+  flex: 1;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.page-logo {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+}
+
+.auth-card {
+  width: 100%;
+  // 24rem * 1.15. `width: 100%` above still lets the card shrink below this on
+  // narrow screens, so the 1rem page padding keeps it inside the viewport at
+  // ~400px and down.
+  max-width: 27.6rem;
+
+  // Grow the form fields with the rest of the card: bigger input/label text and
+  // a taller line box (the outlined field sizes to its content, so a taller
+  // line box means visibly taller inputs — not just wider ones).
+  @include mat.form-field-overrides(
+    (
+      container-text-size: 1.15rem,
+      container-text-line-height: 1.7rem,
+      outlined-label-text-size: 1.15rem,
+      subscript-text-size: 0.86rem,
+    )
+  );
+}
+
+// ~22px title * 1.15, with a matching line box and a bit more breathing room
+// beneath the heading before the form starts.
+.auth-card mat-card-title {
+  font-size: 1.58rem;
+  line-height: 1.85rem;
+}
+
+.auth-card mat-card-header {
+  margin-bottom: 1.75rem;
+}
+
+.auth-card mat-card-content {
+  // 16px * 1.15 horizontal padding so the wider card doesn't leave the form
+  // feeling cramped against the edges.
+  padding: 0 1.15rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.auth-form mat-form-field {
+  width: 100%;
+}
+
+.auth-error {
+  margin: 0 0 0.5rem;
+  color: var(--mat-sys-error);
+  text-align: center;
+}
+
+// Neutral confirmation banner (e.g. "account deleted") — set apart from the
+// form and distinct from the error styling above.
+.auth-notice {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  text-align: center;
+}
+
+.auth-submit {
+  align-self: stretch;
+}
+
+// Scale the primary button up with the rest of the card: 40px * 1.15 tall and a
+// larger label. Height is set here (rather than via a token) because Material
+// drives the button height from a density token that the `overrides` API does
+// not expose; the `.auth-card` prefix gives us the specificity to win.
+.auth-card .auth-submit {
+  height: 2.875rem;
+  font-size: 1rem;
+}
+
+// The "Create an account" / "Already have an account?" link scales with the card too.
+.auth-card mat-card-actions a {
+  font-size: 1rem;
+}
+
+// Divider between the primary email/password form and the secondary
+// "Continue with Google" button — a centred "or" with rules either side.
+// Margins/gap scale up a touch so it isn't cramped in the larger card.
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 1.15rem 0;
+  color: var(--mat-sys-on-surface-variant);
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--mat-sys-outline-variant);
+  }
+
+  span {
+    font-size: 1rem;
+  }
+}
+
+// "Continue with Google" — Google renders this button itself and only exposes a
+// fixed "large" size plus a pixel width, so we scale it up (1.25x, larger than
+// the primary button) with a CSS transform to get a taller button with a bigger
+// label and logo. `transform-origin: top center` grows it downward and outward
+// from the divider; the extra height is reserved with margin-bottom so it never
+// collides with the account link below.
+//
+// Because the transform is visual only, the pre-scale width has to stay small
+// enough that the scaled result fits the card at every width. The component
+// measures its own box (via offsetWidth, which ignores this transform) and asks
+// Google for that pixel width, so a percentage width that shrinks with the card
+// keeps the scaled button inside the edges from desktop down to ~320px.
+app-google-sign-in-button {
+  display: block;
+  width: 75%;
+  max-width: 19.375rem; // 310px — caps the pre-scale width so 1.25x stays within the card on desktop
+  margin: 0 auto 0.75rem;
+  transform: scale(1.25);
+  transform-origin: top center;
+}

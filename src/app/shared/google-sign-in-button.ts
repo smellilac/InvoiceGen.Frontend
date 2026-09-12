@@ -69,7 +69,10 @@ export class GoogleSignInButton {
 
     const host = this.buttonHost().nativeElement;
     // GSI requires a pixel width in [200, 400]; size to the container when we can.
-    const measured = Math.round(host.getBoundingClientRect().width);
+    // Use offsetWidth (the layout width) rather than getBoundingClientRect: a host
+    // page may scale this button up with a CSS transform, and offsetWidth ignores
+    // that transform so we ask Google for the pre-scale width, not the scaled one.
+    const measured = host.offsetWidth;
     const width = measured > 0 ? Math.min(400, Math.max(200, measured)) : 320;
 
     google.accounts.id.renderButton(host, {
