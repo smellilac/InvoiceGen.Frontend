@@ -19,6 +19,11 @@ How login, token storage, and route protection work. See
 - `login(email, password)` / `register(...)` — call the backend, store
   both tokens (access in the signal, refresh in `localStorage`), store the
   returned `User`.
+- `googleSignIn(idToken)` — "Continue with Google". Posts the Google ID
+  token (a JWT obtained client-side from Google Identity Services) to
+  `POST /auth/google`, which returns the same `AuthResponse` as login;
+  stores the tokens/user via the exact same path `login()` uses. See
+  `docs/google-sign-in.md`.
 - `logout()` — calls `POST /auth/logout` with the current refresh token
   (revokes it server-side), then clears the in-memory access token and
   removes the refresh token from `localStorage`, regardless of whether the
@@ -33,10 +38,12 @@ How login, token storage, and route protection work. See
 Applies to every outgoing request:
 
 1. If the request URL is one of the public endpoints (`/auth/register`,
-   `/auth/login`, `/auth/refresh`, `/document-types`, and `/documents/guest`
-   — the unauthenticated guest document flow), pass it through unchanged: no
-   bearer token attached, and no refresh-on-401 retry. A guest request can't
-   401 for auth reasons, so it must never drag the refresh machinery in.
+   `/auth/login`, `/auth/google`, `/auth/refresh`, `/document-types`, and
+   `/documents/guest` — the unauthenticated guest document flow), pass it
+   through unchanged: no bearer token attached, and no refresh-on-401 retry.
+   A guest or `/auth/google` request can't 401 for *our* auth reasons (it
+   carries a Google ID token, not our access token), so it must never drag
+   the refresh machinery in.
 2. Otherwise, attach `Authorization: Bearer <access_token>` from
    `AuthService`.
 3. If the response is `401`, call `AuthService.refresh()` once. On

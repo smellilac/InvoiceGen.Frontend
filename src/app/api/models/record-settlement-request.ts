@@ -4,12 +4,12 @@
 import { MonetaryAmount } from '../models/monetary-amount';
 
 /**
- * Body for `POST /documents/{documentId}/settlements`. See `x-settlement-policy.recording_settlements`.
+ * A single signed change to the document's `amount_settled`. Positive records a payment/refund received; negative corrects a previous mistaken entry (no separate payment history is kept — this is the one way to fix a mistake). The resulting `amount_settled + amount` must land within `[0, total]`. See `x-settlement-policy` for what "settled" means per `type`.
  */
 export interface RecordSettlementRequest {
 
   /**
-   * Signed delta added to the document's current `amount_settled` — NOT the new absolute value. Positive records money received (or, for `credit_note`, refunded); negative corrects a previous over-entry. Rejected with `422` (field `amount`) if it would push `amount_settled` below zero or above `total`.
+   * Signed delta applied to `amount_settled` (may be negative). The resulting settled amount must stay within `[0, total]`, else `422` on the `amount` field.
    */
   amount: MonetaryAmount;
 }

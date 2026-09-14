@@ -13,6 +13,11 @@ import { AuthService } from './auth.service';
 const PUBLIC_PATHS = [
   '/auth/register',
   '/auth/login',
+  // Google sign-in is unauthenticated (`security: []`): the request carries a
+  // Google ID token in its body, not one of our access tokens, so it must get
+  // no bearer header and must never trigger the refresh-on-401 retry — the same
+  // treatment as the other `/auth/*` entry points here.
+  '/auth/google',
   '/auth/refresh',
   '/document-types',
   // The guest document endpoint is unauthenticated (`security: []`): a guest
@@ -29,7 +34,9 @@ function isPublicRequest(url: string): boolean {
   } catch {
     path = url;
   }
-  return PUBLIC_PATHS.some((publicPath) => path === publicPath || path.startsWith(`${publicPath}/`));
+  return PUBLIC_PATHS.some(
+    (publicPath) => path === publicPath || path.startsWith(`${publicPath}/`),
+  );
 }
 
 function withBearerToken(req: HttpRequest<unknown>, token: string | null): HttpRequest<unknown> {

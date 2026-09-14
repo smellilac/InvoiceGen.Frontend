@@ -9,6 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth.service';
+import { GoogleSignInButton } from '../../../shared/google-sign-in-button';
 import { Logo } from '../../../shared/logo';
 
 @Component({
@@ -23,6 +24,7 @@ import { Logo } from '../../../shared/logo';
     MatButtonModule,
     MatProgressSpinnerModule,
     Logo,
+    GoogleSignInButton,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
@@ -67,18 +69,37 @@ export class Login {
 
     try {
       await this.auth.login(email, password);
-      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
-      await this.router.navigateByUrl(returnUrl);
+      await this.navigateAfterLogin();
     } catch (error) {
       this.errorMessage.set(messageForLoginError(error));
     } finally {
       this.submitting.set(false);
     }
   }
+
+  /**
+   * The Google button component has already stored the tokens by the time this
+   * fires; we just route to the same post-login destination a normal login uses.
+   */
+  protected onGoogleSignIn(): void {
+    void this.navigateAfterLogin();
+  }
+
+  private navigateAfterLogin(): Promise<boolean> {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
+    return this.router.navigateByUrl(returnUrl);
+  }
 }
 
 function messageForLoginError(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
+    // 409 `account_uses_google_auth`: this email was created via Google and has
+    // no password, so a password login can't succeed. Point the user at the
+    // "Continue with Google" button rather than showing a wrong-password error.
+    // (Login only ever returns 409 for this case — see the backend spec.)
+    if (error.status === 409) {
+      return 'This account uses Google sign-in. Use “Continue with Google” below to sign in.';
+    }
     // A locked account currently also surfaces as a 401 (see docs/authentication.md).
     if (error.status === 401) {
       return 'Incorrect email or password.';

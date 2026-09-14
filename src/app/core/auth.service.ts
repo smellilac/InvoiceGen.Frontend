@@ -6,6 +6,7 @@ import { ApiConfiguration } from '../api/api-configuration';
 import { deleteCurrentUser } from '../api/fn/auth/delete-current-user';
 import { deleteUserLogo } from '../api/fn/auth/delete-user-logo';
 import { getCurrentUser } from '../api/fn/auth/get-current-user';
+import { googleSignIn } from '../api/fn/auth/google-sign-in';
 import { loginUser } from '../api/fn/auth/login-user';
 import { logoutUser } from '../api/fn/auth/logout-user';
 import { refreshToken } from '../api/fn/auth/refresh-token';
@@ -82,6 +83,18 @@ export class AuthService {
     const response = await this.api.invoke(registerUser, {
       body: { email, password, business_name: businessName },
     });
+    this.applyAuthResponse(response);
+  }
+
+  /**
+   * Exchange a Google Sign-In ID token (a JWT obtained from Google Identity
+   * Services on the client) for this app's token pair via `POST /auth/google`.
+   * The backend verifies the token server-side and creates, links, or logs in
+   * the matching account, returning the SAME `AuthResponse` shape as login — so
+   * we store the tokens and user exactly the way {@link login} does.
+   */
+  async googleSignIn(idToken: string): Promise<void> {
+    const response = await this.api.invoke(googleSignIn, { body: { id_token: idToken } });
     this.applyAuthResponse(response);
   }
 
