@@ -1,6 +1,6 @@
-// Shared layout for the minimal placeholder legal/help pages. Kept in one file
-// (referenced by each page's `styleUrl`) so the three stay visually identical
-// until real content replaces their templates.
+// Shared layout for the legal/help pages (Terms, Privacy, Help). Kept in one
+// file (referenced by each page's `styleUrl`) so the three stay visually
+// identical — same page frame, typography, and long-form document styling.
 .legal-page {
   max-width: 54rem;
   margin: 0 auto;
@@ -66,6 +66,42 @@
 
 .legal-doc .legal-meta {
   margin: 0 0 2rem;
+}
+
+// Horizontal rule matching the section dividers (the `h2` border-top). Used
+// only in the page header — between the title block and the intro, and between
+// the intro and the first section — where there's no `h2` border to carry the
+// separation. The first `h2`'s own top border stays suppressed, so the rule
+// before it isn't doubled.
+.legal-doc hr {
+  margin: 2.5rem 0;
+  border: none;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+// Bulleted lists within a section (e.g. the Privacy Policy's "What We Collect"
+// and "Sharing" sections). Matches the paragraph line-height so a list reads as
+// part of the same body copy rather than a denser block.
+.legal-doc ul {
+  margin: 0 0 1rem;
+  padding-left: 1.5rem;
+}
+
+.legal-doc li {
+  margin: 0 0 0.5rem;
+  line-height: 1.6;
+}
+
+// Inline callout for an emphasized aside within a section (e.g. the Privacy
+// Policy's data-residency note). A tinted left border sets it apart from the
+// surrounding paragraphs without pulling it out of the reading flow.
+.legal-doc .legal-note {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--mat-sys-primary);
+  border-radius: 4px;
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
 }
 
 .legal-doc a {

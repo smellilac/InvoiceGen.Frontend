@@ -19,6 +19,8 @@ import { RouterLink } from '@angular/router';
       <h1>Terms of Service — Invoice-Gen</h1>
       <p class="legal-meta"><strong>Last Updated:</strong> 09/10/2026</p>
 
+      <hr />
+
       <p>
         Please read these Terms of Service ("Terms") carefully before using
         Invoice-Gen.
@@ -38,6 +40,8 @@ import { RouterLink } from '@angular/router';
         "us," "our"), and the customer agreeing to these Terms ("Customer,"
         "you").
       </p>
+
+      <hr />
 
       <h2>1. The Service</h2>
       <p>

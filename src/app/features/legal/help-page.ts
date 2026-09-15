@@ -17,11 +17,15 @@ import { RouterLink } from '@angular/router';
       <a class="legal-back" routerLink="/">← Back to Invoice-Gen</a>
       <h1>Help</h1>
 
+      <hr />
+
       <p>
         Invoice-Gen lets you create professional invoices, receipts, quotes, and
         nine other types of billing documents, then download them as a PDF or
         send them straight to a customer by email.
       </p>
+
+      <hr />
 
       <h2>Why use Invoice-Gen?</h2>
       <p>

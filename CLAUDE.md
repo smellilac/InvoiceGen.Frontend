@@ -35,10 +35,9 @@ list — keep it honest):
   the create form and download a PDF via `POST /documents/guest` (nothing
   saved), gated by a soft client-side free-document limit that then shows a
   sign-up prompt (`features/documents/guest-attempts.service.ts`).
-- **Informational pages** — a hand-authored **Terms of Service** (`/terms`)
-  and **Help** (`/help`) page with real content, plus a **Privacy Policy**
-  (`/privacy`) that is still a "coming soon" placeholder. All three are
-  public, linked from the footer.
+- **Informational pages** — hand-authored **Terms of Service** (`/terms`),
+  **Help** (`/help`), and **Privacy Policy** (`/privacy`) pages with real
+  content. All three are public, linked from the footer.
 
 Update this file and `docs/` as real implementation choices land — don't
 let them go stale once code exists, same rule the backend repo follows.
