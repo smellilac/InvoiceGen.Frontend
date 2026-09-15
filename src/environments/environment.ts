@@ -6,6 +6,11 @@ export const environment = {
   production: false,
 
   /**
+   * Base URL of the backend API. Dev points at the local backend.
+   */
+  apiBaseUrl: 'https://localhost:7201',
+
+  /**
    * Google Identity Services OAuth client ID for "Continue with Google".
    * SWAP THIS PER ENVIRONMENT — each deployment (dev/staging/prod) should use
    * its own OAuth client, whose authorized origins match that origin. The
