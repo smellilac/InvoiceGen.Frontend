@@ -6,6 +6,11 @@ export const environment = {
   production: true,
 
   /**
+   * Base URL of the backend API. Production points at the live backend.
+   */
+  apiBaseUrl: 'https://invoicegen-01.onrender.com',
+
+  /**
    * Google Identity Services OAuth client ID for "Continue with Google".
    * SWAP THIS PER ENVIRONMENT — production should use its own OAuth client
    * whose authorized JavaScript origins match the production origin. It is
