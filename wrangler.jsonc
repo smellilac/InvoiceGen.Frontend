@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "invoiceapp-frontend",
+  "compatibility_date": "2026-09-15",
+  "assets": {
+    // Angular's `@angular/build:application` builder emits the browser bundle
+    // into dist/<project>/browser — that folder (with index.html) is what we serve.
+    "directory": "./dist/invoiceapp-frontend/browser",
+    // Serve index.html for unknown paths so client-side routes survive a hard
+    // refresh / deep link (e.g. /documents/123) instead of returning a 404.
+    "not_found_handling": "single-page-application"
+  }
+}
