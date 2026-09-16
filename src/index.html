@@ -25,6 +25,32 @@
          the login/register pages. Loaded once here so the global `google.accounts`
          API is available app-wide; each page renders the button on demand. -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Google Analytics 4 (gtag.js).
+         The guard below skips localhost/127.0.0.1 so `ng serve` never loads GA
+         or sends hits. The Angular AnalyticsService (core/analytics.service.ts)
+         additionally gates on environment.production and fires a `page_view` on
+         every router NavigationEnd — this is a single-page app, so a raw snippet
+         would only ever report the first page load. `send_page_view: false`
+         here avoids double-counting that initial navigation. Navigation paths
+         only are ever sent: no user email, document contents, or customer data. -->
+    <script>
+      (function () {
+        var host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1' || host === '[::1]') return;
+        var id = 'G-Q3N1BL0KFG';
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+        document.head.appendChild(s);
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+          dataLayer.push(arguments);
+        }
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', id, { send_page_view: false });
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>

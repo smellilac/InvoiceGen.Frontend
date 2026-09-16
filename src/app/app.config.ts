@@ -1,5 +1,6 @@
 import {
   ApplicationConfig,
+  inject,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
@@ -10,6 +11,7 @@ import { routes } from './app.routes';
 import { provideApiConfiguration } from './api/api-configuration';
 import { authInterceptor } from './core/auth.interceptor';
 import { initializeAuth } from './core/auth.bootstrap';
+import { AnalyticsService } from './core/analytics.service';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
@@ -30,5 +32,8 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideApiConfiguration(environment.apiBaseUrl),
     provideAppInitializer(initializeAuth),
+    // Start GA4 page-view tracking on router navigations. No-ops outside
+    // production — see AnalyticsService.
+    provideAppInitializer(() => inject(AnalyticsService).init()),
   ],
 };
