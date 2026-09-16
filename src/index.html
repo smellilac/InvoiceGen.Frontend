@@ -25,6 +25,11 @@
          the login/register pages. Loaded once here so the global `google.accounts`
          API is available app-wide; each page renders the button on demand. -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Google Analytics 4 is intentionally NOT loaded here. It must not run
+         until the visitor accepts analytics cookies (EU consent + our Privacy
+         Policy), so the gtag.js script is injected dynamically at runtime by
+         AnalyticsService (core/analytics.service.ts) — only after Accept, and
+         only in production. See CookieConsent (shared/cookie-consent.ts). -->
   </head>
   <body>
     <app-root></app-root>

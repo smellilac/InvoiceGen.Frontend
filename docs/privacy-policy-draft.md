@@ -21,13 +21,20 @@ Invoice-Gen handles a few different categories of personal data, and it's worth 
 - **Customer records**: name, email, address, phone, and private notes for any customer you save.
 - **Document data**: everything you enter to create a document — line items, dates, amounts, tax/discount/shipping figures, notes, and terms.
 - **Guest document data**: if you generate a document without an account, the same kind of information (recipient/sender names and addresses, line items, amounts) is used only to produce that one PDF and is not saved — see "Guest document data" above and Retention below.
-- **Technical information**: standard web server logs (such as IP address, browser type, and request timestamps), collected automatically for security and operational purposes — not for advertising or tracking. For guest document generation specifically, your IP address is also used briefly to apply a rate limit that prevents abuse of that feature.
+- **Technical information**: standard web server logs (such as IP address, browser type, and request timestamps), collected automatically for security and operational purposes. For guest document generation specifically, your IP address is also used briefly to apply a rate limit that prevents abuse of that feature.
+- **Analytics information**: when you visit the Service, Google Analytics collects information about that visit — such as the pages you viewed, how long you stayed, the general geographic region you're browsing from (derived from IP address, not your exact location), device and browser type, and how you arrived at the site (e.g., a search engine or a direct link). This is described further in "Analytics" below.
 
-We do not collect demographic information, and we do not use cookies or any technology for advertising or cross-site tracking. Authentication uses your browser's local storage to hold a refresh token, not a cookie — see our [Terms of Service](/terms) and [Help](/help) pages for how this works.
+We do not collect demographic information beyond what's described above, and we do not use cookies or any technology for advertising. We do use cookies for analytics, as described in "Analytics" below. Authentication itself does not use cookies — it uses your browser's local storage to hold a refresh token — see our [Terms of Service](/terms) and [Help](/help) pages for how this works.
+
+### Analytics
+
+We use **Google Analytics**, provided by Google, to understand how visitors use the Service — for example, which pages are viewed and how many people visit. Google Analytics uses cookies and similar technology to do this. We have not enabled Google Signals or any feature that would use this data for advertising, and we do not combine Analytics data with your account information.
+
+If you'd rather not be included in this, you can install the [Google Analytics Opt-out Browser Add-on](https://tools.google.com/dlpage/gaoptout), or use your browser's cookie/tracking-blocking settings. Google's own handling of this data is described in the [Google Privacy Policy](https://policies.google.com/privacy).
 
 ## 3. How We Use It
 
-We use the information above to operate the Service: authenticating you, generating and storing your documents, pre-filling forms from your saved profile or customers, sending documents by email when you ask us to, calculating totals and payment status, generating a one-off document for a visitor who hasn't created an account yet, and responding to support requests. We do not use your data for advertising, and we do not build advertising profiles from it.
+We use the information above to operate the Service: authenticating you, generating and storing your documents, pre-filling forms from your saved profile or customers, sending documents by email when you ask us to, calculating totals and payment status, generating a one-off document for a visitor who hasn't created an account yet, responding to support requests, and — via Google Analytics — understanding overall traffic and usage patterns so we can improve the Service. We do not use your data for advertising, and we do not build advertising profiles from it.
 
 ## 4. Sharing
 
@@ -39,6 +46,7 @@ We do share information with service providers strictly as needed to operate the
 - **Render**, which hosts the backend application that powers the Service, in its Frankfurt, Germany (EU) data center region.
 - **Neon**, which hosts our database — where your account, customer, and document data is stored — also in its Frankfurt, Germany (EU) data center region.
 - **Cloudflare**, which delivers the Invoice-Gen web application (the pages and code your browser loads) through its global content delivery network. This step only serves the application's static files, not your account, customer, or document data — that data is stored solely on Render and Neon as described above — but because Cloudflare's network has locations worldwide, loading the app may briefly pass through infrastructure outside the EU/EEA depending on where you're located.
+- **Google**, which provides Google Analytics as described in "Analytics" above. Google processes this data on infrastructure located outside the EU/EEA (including the United States); Google represents that it does so under the EU Standard Contractual Clauses and its own compliance frameworks — see the [Google Privacy Policy](https://policies.google.com/privacy) for details.
 
 We may also disclose personal information if required by law — for example, in response to a valid legal request — or if we believe in good faith that disclosure is necessary to protect our rights, investigate fraud, or protect the safety of our users or others.
 
@@ -55,6 +63,8 @@ We take reasonable technical and administrative measures to protect your informa
 We keep your data for as long as your account is active. Individual documents and customers you delete are retained in a recoverable, non-visible state rather than being immediately erased (so accidental deletions can be investigated if needed), consistent with how the app already handles deletion elsewhere. If you delete your entire account, all of your data — account, profile, documents, and customers — is deleted immediately and permanently; this cannot be undone. See the Term and Termination section of our [Terms of Service](/terms).
 
 Guest (no-account) document generation is not retained at all: the information you submit and the PDF we generate from it exist only to produce that one response and are discarded immediately afterward. We keep no copy — downloading the PDF when it's offered to you is the only way to keep it. Your IP address, used briefly for the rate limit described in "What We Collect," is not retained beyond what's needed to enforce that limit.
+
+Analytics data collected by Google Analytics is retained according to Google's own retention settings for this property (by default, 14 months from collection, after which it is automatically deleted), rather than our own account-based retention rules described above.
 
 ## 7. Your Rights and Choices
 
