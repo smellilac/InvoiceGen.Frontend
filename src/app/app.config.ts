@@ -32,8 +32,9 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideApiConfiguration(environment.apiBaseUrl),
     provideAppInitializer(initializeAuth),
-    // Start GA4 page-view tracking on router navigations. No-ops outside
-    // production — see AnalyticsService.
+    // Arm GA4: it starts watching for consent, but loads Google Analytics and
+    // tracks page views only after the visitor accepts cookies (and only in
+    // production). No-ops otherwise — see AnalyticsService / CookieConsent.
     provideAppInitializer(() => inject(AnalyticsService).init()),
   ],
 };
