@@ -297,7 +297,7 @@ import { RouterLink } from '@angular/router';
       <p>
         Questions about this Privacy Policy, or requests regarding your personal
         data, can be sent to
-        <a href="mailto:dimatega@gmail.com">dimatega&#64;gmail.com</a>.
+        <a href="mailto:axenpartnership@gmail.com">axenpartnership&#64;gmail.com</a>.
       </p>
     </main>
   `,
