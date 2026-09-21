@@ -4,6 +4,7 @@ import { AUTH_ROUTES } from './features/auth/auth.routes';
 import { CUSTOMERS_ROUTES } from './features/customers/customers.routes';
 import { DOCUMENTS_ROUTES } from './features/documents/documents.routes';
 import { LEGAL_ROUTES } from './features/legal/legal.routes';
+import { SEARCH_ROUTES } from './features/search/search.routes';
 import { authGuard } from './core/auth.guard';
 import { MainLayout } from './shared/main-layout';
 
@@ -45,6 +46,7 @@ export const routes: Routes = [
         children: [
           ...DOCUMENTS_ROUTES,
           ...CUSTOMERS_ROUTES,
+          ...SEARCH_ROUTES,
           {
             path: 'profile',
             loadComponent: () =>

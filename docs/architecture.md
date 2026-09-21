@@ -35,6 +35,7 @@ feature folders — if two features need the same thing, it belongs in
 | `/documents/new` | public | Create form. Signed in: `POST /documents`, saved, then detail page. Guest: `POST /documents/guest`, PDF downloaded, nothing saved. Accepts `?type=` and (signed in only) `?customerId=` / `?duplicateFrom=` |
 | `/documents` | protected | Paginated history — `GET /documents`, filterable by `type` / `customer_id` |
 | `/documents/:id` | protected | Detail: summary, Download PDF, Send Email |
+| `/search` | protected | Natural-language document search — `POST /api/search`, filterable by status / amount range / date range. Results are cards (id, score, snippet) linking to `/documents/:id` |
 | `/customers` | protected | Paginated list — `/customers*` |
 | `/customers/new` | protected | Create form — `POST /customers` |
 | `/customers/:id` | protected | Read-only detail + document history (`GET /documents?customer_id=`); "Create document for this customer" opens the picker with `?customerId=` |

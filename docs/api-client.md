@@ -40,6 +40,16 @@ directly:
 | `AuthService` | `/auth/*` — see `authentication.md` for the token-handling logic layered on top |
 | `DocumentService` | `/document-types`, `/documents*` |
 | `CustomerService` | `/customers*` |
+| `SearchService` | `POST /api/search` |
+
+> **`SearchService` is a temporary exception.** `POST /api/search` isn't in the
+> backend's `openapi.yaml` yet, so its request/response models and the
+> `api/fn/search/search-documents.ts` function are **hand-authored** (clearly
+> marked as such, unlike the generated files). They deliberately mirror the shape
+> `ng-openapi-gen` emits — a thin `RequestBuilder` call plus a `PATH` — so they
+> plug into `Api.invoke` and the auth interceptor exactly like a generated one.
+> Once the endpoint lands in the spec, delete those hand-authored files and let
+> the generator own them.
 
 This indirection is what makes `httpResource` usable cleanly for lists
 (`DocumentService.list(params)` returns an `httpResource`-wrapped call

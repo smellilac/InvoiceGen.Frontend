@@ -1,0 +1,124 @@
+<main class="search-page">
+  <div class="search-intro">
+    <h1>Search</h1>
+    <p>Search your documents in plain language, then narrow it down with filters.</p>
+  </div>
+
+  <form class="search-form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-card appearance="outlined">
+      <mat-card-content class="card-body">
+        <mat-form-field appearance="outline" class="query-field">
+          <mat-label>Search</mat-label>
+          <input
+            matInput
+            formControlName="query"
+            placeholder="e.g. unpaid invoices for Acme last month"
+            autocomplete="off"
+          />
+          <mat-icon matPrefix>search</mat-icon>
+          @if (form.controls.query.touched && form.controls.query.hasError('required')) {
+            <mat-error>Enter something to search for.</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="filter-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              <mat-option [value]="null">Any status</mat-option>
+              @for (status of statuses; track status.value) {
+                <mat-option [value]="status.value">{{ status.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Min amount</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="minAmount" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Max amount</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="maxAmount" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Date from</mat-label>
+            <input matInput [matDatepicker]="fromPicker" formControlName="dateFrom" />
+            <mat-datepicker-toggle matIconSuffix [for]="fromPicker" />
+            <mat-datepicker #fromPicker />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Date to</mat-label>
+            <input matInput [matDatepicker]="toPicker" formControlName="dateTo" />
+            <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
+            <mat-datepicker #toPicker />
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="searching()">
+            @if (searching()) {
+              <mat-progress-spinner mode="indeterminate" diameter="20" />
+            } @else {
+              <ng-container>
+                <mat-icon>search</mat-icon>
+                Search
+              </ng-container>
+            }
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </form>
+
+  @if (errorMessage()) {
+    <p class="form-error" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (searching()) {
+    <div class="search-status" role="status" aria-live="polite">
+      <mat-spinner diameter="48" />
+      <p>Searching…</p>
+    </div>
+  } @else if (results() !== null) {
+    @if (results()!.length === 0) {
+      <div class="search-status">
+        <mat-icon class="status-icon">search_off</mat-icon>
+        <p>No documents matched your search.</p>
+      </div>
+    } @else {
+      <ul class="result-list">
+        @for (result of results(); track result.id) {
+          <li>
+            <a class="result-row" [routerLink]="['/documents', result.id]">
+              <mat-card appearance="outlined" class="result-row-inner">
+                <mat-card-content class="result-row-content">
+                  <div class="result-head">
+                    <span class="result-id">
+                      <mat-icon class="result-icon" aria-hidden="true">description</mat-icon>
+                      {{ result.id }}
+                    </span>
+                    <span class="result-score" aria-label="Relevance score">
+                      <mat-icon class="score-icon" aria-hidden="true">bolt</mat-icon>
+                      {{ result.score | number: '1.0-2' }}
+                    </span>
+                  </div>
+
+                  @if (result.snippet) {
+                    <p class="result-snippet">{{ result.snippet }}</p>
+                  }
+
+                  @if (result.total != null) {
+                    <span class="result-total">{{ result.total | money: result.currency }}</span>
+                  }
+                </mat-card-content>
+              </mat-card>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  }
+</main>
