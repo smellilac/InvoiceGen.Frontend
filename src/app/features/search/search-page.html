@@ -8,11 +8,11 @@
     <mat-card appearance="outlined">
       <mat-card-content class="card-body">
         <mat-form-field appearance="outline" class="query-field">
-          <mat-label>Search</mat-label>
           <input
             matInput
             formControlName="query"
             placeholder="e.g. unpaid invoices for Acme last month"
+            aria-label="Search"
             autocomplete="off"
           />
           <mat-icon matPrefix>search</mat-icon>
@@ -58,14 +58,20 @@
         </div>
 
         <div class="form-actions">
-          <button mat-flat-button color="primary" type="submit" [disabled]="searching()">
+          <button
+            mat-flat-button
+            color="primary"
+            type="submit"
+            class="search-button"
+            [disabled]="searching()"
+          >
             @if (searching()) {
               <mat-progress-spinner mode="indeterminate" diameter="20" />
             } @else {
-              <ng-container>
-                <mat-icon>search</mat-icon>
+              <span style="display: inline-flex; align-items: center; gap: 6px; line-height: 1;">
+                <mat-icon style="font-size: 20px; width: 20px; height: 20px; line-height: 20px;">search</mat-icon>
                 Search
-              </ng-container>
+              </span>
             }
           </button>
         </div>

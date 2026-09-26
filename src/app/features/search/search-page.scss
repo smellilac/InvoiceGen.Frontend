@@ -48,6 +48,20 @@
   margin-top: 0.5rem;
 }
 
+.search-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: normal;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+  }
+}
+
 .form-error {
   margin: 0 0 1.5rem;
   color: var(--mat-sys-error);
