@@ -15,20 +15,19 @@ import { RouterLink } from '@angular/router';
 
 import { SearchRequest } from '../../api/models/search-request';
 import { SearchResult } from '../../api/models/search-result';
-import { MoneyPipe } from '../../shared/currency.pipe';
 import { SearchService } from './search.service';
 
 /**
  * Natural-language search over the user's documents (route `/search`). A single
  * text query plus optional structured filters (status, min/max amount, date
  * range) POST to `/api/search`; matches render as cards showing each result's
- * document id, relevance score, and matched snippet, linking through to the
- * document's detail page.
+ * number, recipient, date, status, total, and relevance score, linking through
+ * to the document's detail page.
  *
  * Mirrors the customer form and document list for layout and state handling:
- * a Reactive Form, a `MoneyPipe` for any amount, and loading/empty/error states
- * (see docs/architecture.md). The `POST /api/search` call carries the user's
- * bearer token via the shared auth interceptor (see docs/authentication.md).
+ * a Reactive Form and loading/empty/error states (see docs/architecture.md).
+ * The `POST /api/search` call carries the user's bearer token via the shared
+ * auth interceptor (see docs/authentication.md).
  */
 @Component({
   selector: 'app-search-page',
@@ -38,7 +37,6 @@ import { SearchService } from './search.service';
     ReactiveFormsModule,
     RouterLink,
     DecimalPipe,
-    MoneyPipe,
     MatButtonModule,
     MatCardModule,
     MatDatepickerModule,

@@ -104,7 +104,7 @@
                   <div class="result-head">
                     <span class="result-id">
                       <mat-icon class="result-icon" aria-hidden="true">description</mat-icon>
-                      {{ result.id }}
+                      {{ result.number || result.id }}
                     </span>
                     <span class="result-score" aria-label="Relevance score">
                       <mat-icon class="score-icon" aria-hidden="true">bolt</mat-icon>
@@ -112,12 +112,20 @@
                     </span>
                   </div>
 
-                  @if (result.snippet) {
-                    <p class="result-snippet">{{ result.snippet }}</p>
-                  }
+                  <div class="result-meta">
+                    @if (result.to) {
+                      <span class="result-to">{{ result.to }}</span>
+                    }
+                    @if (result.date) {
+                      <span class="result-date">{{ result.date }}</span>
+                    }
+                    @if (result.status) {
+                      <span class="result-status">{{ result.status }}</span>
+                    }
+                  </div>
 
                   @if (result.total != null) {
-                    <span class="result-total">{{ result.total | money: result.currency }}</span>
+                    <span class="result-total">{{ result.total | number: '1.2-2' }}</span>
                   }
                 </mat-card-content>
               </mat-card>
