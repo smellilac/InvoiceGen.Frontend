@@ -215,6 +215,7 @@ export class MainLayout {
    */
   protected readonly navItems: ReadonlyArray<{ label: string; link: string; gated: boolean }> = [
     { label: 'Documents', link: '/documents', gated: true },
+    { label: 'Search', link: '/search', gated: true },
     { label: 'Customers', link: '/customers', gated: true },
     { label: 'Profile', link: '/profile', gated: true },
     { label: 'Help', link: '/help', gated: false },

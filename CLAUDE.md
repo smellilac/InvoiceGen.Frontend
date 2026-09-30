@@ -31,6 +31,12 @@ list — keep it honest):
   **Record settlement** (payment/refund), plus type-aware overdue badges.
 - **Customers** — full CRUD: list, detail, create, edit, delete
   (`features/customers/`).
+- **Search** (`/search`) — natural-language search over the user's documents
+  via `POST /api/search`, with optional status / amount-range / date-range
+  filters; results render as cards (id, score, snippet) linking to each
+  document's detail page (`features/search/`). The `/api/search` endpoint isn't
+  in the backend's `openapi.yaml` yet, so its client is hand-authored pending a
+  spec bump — see `docs/api-client.md`.
 - **Guest / unauthenticated generation** — signed-out visitors can fill
   the create form and download a PDF via `POST /documents/guest` (nothing
   saved), gated by a soft client-side free-document limit that then shows a
