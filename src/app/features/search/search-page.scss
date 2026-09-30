@@ -172,9 +172,16 @@
   height: 1rem;
 }
 
-.result-snippet {
-  margin: 0;
+.result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
   color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+
+  .result-status {
+    text-transform: capitalize;
+  }
 }
 
 .result-total {
